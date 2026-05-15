@@ -1,9 +1,11 @@
 from rich.console import Console
 from app.agent.agent import Agent
 from app.commands.handler import CommandHandler
+import typer
 
+chat_app = typer.Typer()
 console = Console()
-
+# DEPRECATED
 def start_chat():
     agent = Agent()
 
@@ -28,6 +30,32 @@ def start_chat():
         #     agent.state.emotion = emotion
         #     console.print(f"[yellow]Emotion changed to {emotion}[/yellow]")
         #     continue
+        console.print(
+            f"\n[bold green]XinBot >> [/bold green]", end=""
+        )
+        for chunk in agent.stream_chat(
+            user_input=user_input
+        ):
+            print(chunk, end='', flush=True)
+        print()
+
+@chat_app.command()
+def start():
+    agent = Agent()
+    console.print(
+        "[bold green]XinBot started![/bold green]"
+    )
+    while True:
+        user_input = input("\nYou >> ")
+        if user_input.lower() in ["exit", "quit"]:
+            break
+        command_handler = CommandHandler(agent)
+        handled = command_handler.handle(
+            user_input
+        )
+        if handled:
+            continue
+        
         console.print(
             f"\n[bold green]XinBot >> [/bold green]", end=""
         )

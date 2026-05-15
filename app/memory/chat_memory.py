@@ -21,11 +21,8 @@ class ChatMemory(BaseMemory):
         self.storage.save(self.messages)
     
     def _trim_messages(self):
-        system_messages = self.messages[0]
-        recent_messages = self.messages[-self.config.MAX_MEMORY_MESSAGES:]
-        self.messages = [
-            system_messages,
-            *recent_messages
+        self.messages = self.messages[
+            -self.config.MAX_MEMORY_MESSAGES:
         ]
     def get_message(self):
         return self.messages
