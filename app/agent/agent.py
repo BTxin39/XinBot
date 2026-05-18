@@ -17,11 +17,11 @@ from app.events.listeners import (
 
 class Agent:
 
-    def __init__(self):
-        self.llm = LLMClient()
-        self.memory = ChatMemory()
+    def __init__(self, config: RuntimeConfig | None = None):
+        self.config = config or RuntimeConfig.load()
+        self.llm = LLMClient(self.config)
+        self.memory = ChatMemory(self.config)
         self.state = AgentState()
-        self.config = RuntimeConfig
         self.event_bus = EventBus()
         self.event_bus.subscribe(
             EmotionChangedEvent,
@@ -33,7 +33,7 @@ class Agent:
         #     content=self.system_prompt
         # )
 
-    # DEPRECATED:
+    # DEPRECATED: 从system.txt读取prompt
     def _load_system_prompt(self) -> str:
         prompt_path = Path(
             "app/llm/prompts/system.txt"
@@ -42,6 +42,7 @@ class Agent:
             encoding="utf-8"
         )
     
+
     def _build_messages(self):
         system_prompt = PromptBuilder.build(self.state)
         messages = [
@@ -81,7 +82,7 @@ class Agent:
         )
         
         # messages = self.memory.get_message()
-        messages = self._build_messages()  # 添加括号，正确调用方法
+        messages = self._build_messages()
         full_response = ""
 
         for chunk in self.llm.stream_chat(
@@ -101,6 +102,7 @@ class Agent:
     def get_status(self) -> AgentStatus:
         return AgentStatus(
             emotion=self.state.emotion,
+            provider=self.config.PROVIDER,
             model_name=self.config.MODEL_NAME,
             memory_messages=len(self.memory.get_message())
         )

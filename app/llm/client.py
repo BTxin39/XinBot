@@ -1,8 +1,12 @@
-from app.llm.providers.openai_provider import OpenAIProvider
+from app.config.runtime import RuntimeConfig
+from app.llm.providers.factory import create_provider
 
 class LLMClient:
-    def __init__(self):
-        self.provider = OpenAIProvider()
+    def __init__(self, config: RuntimeConfig | None = None):
+        self.config = config or RuntimeConfig.load()
+        self.provider = create_provider(
+            self.config.provider
+        )
 
     def chat(
             self,

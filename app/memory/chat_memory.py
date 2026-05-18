@@ -3,8 +3,8 @@ from app.config.runtime import RuntimeConfig
 from app.storage.json_storage import JsonStorage
 
 class ChatMemory(BaseMemory):
-    def __init__(self):
-        self.config = RuntimeConfig()
+    def __init__(self, config: RuntimeConfig | None = None):
+        self.config = config or RuntimeConfig.load()
         self.storage = JsonStorage(
             file_path="data/chat_memory.json"
         )

@@ -9,17 +9,20 @@ from app.llm.providers.base import BaseProvider
 
 
 class OpenAIProvider(BaseProvider):
-    def __init__(self):
-        self.client = OpenAI(
-            api_key=(
-                Settings.OPENAI_API_KEY
-            ),
-            base_url=(
-                Settings.OPENAI_BASE_URL
-            ),
-        )
+    def __init__(
+        self,
+        api_key: str | None = Settings.OPENAI_API_KEY,
+        base_url: str | None = Settings.OPENAI_BASE_URL,
+    ):
+        client_kwargs = {
+            "api_key": api_key,
+        }
+        if base_url:
+            client_kwargs["base_url"] = base_url
 
-        # DEPRECATED    
+        self.client = OpenAI(**client_kwargs)
+
+    # DEPRECATED    
     def chat(
             self,
             messages: list[dict],

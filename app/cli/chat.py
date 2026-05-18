@@ -40,16 +40,45 @@ def start_chat():
         print()
 
 @chat_app.command()
-def start():
-    agent = Agent()
+def start(
+    model: str | None = typer.Option(
+        None,
+        "--model",
+        "-m",
+        help="Override model for this chat session.",
+    ),
+    provider: str | None = typer.Option(
+        None,
+        "--provider",
+        "-p",
+        help="Override provider for this chat session.",
+    ),
+):
+    from app.config.runtime import RuntimeConfig
+    from app.llm.registry import LLMRegistry
+
+    config = RuntimeConfig.load()
+    if model:
+        config.model_name = model
+        registered_model = LLMRegistry().get_model(model)
+        if registered_model and not provider:
+            config.provider = registered_model.provider
+    if provider:
+        config.provider = provider
+
+    agent = Agent(config)
     console.print(
-        "[bold green]XinBot started![/bold green]"
+        (
+            "[bold green]XinBot started![/bold green] "
+            f"[dim]provider={config.provider} "
+            f"model={config.model_name}[/dim]"
+        )
     )
+    command_handler = CommandHandler(agent)
     while True:
         user_input = input("\nYou >> ")
         if user_input.lower() in ["exit", "quit"]:
             break
-        command_handler = CommandHandler(agent)
         handled = command_handler.handle(
             user_input
         )

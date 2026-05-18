@@ -3,7 +3,7 @@ from pathlib import Path
 
 class PromptBuilder:
     @staticmethod
-    def build(state: AgentState) -> str:  # 移除多余的self参数
+    def build(state: AgentState) -> str:
         base_prompt = Path(
             "app/llm/prompts/system.txt"
         ).read_text(encoding="utf-8")

@@ -1,0 +1,32 @@
+{
+  "providers": [
+    {
+      "name": "openai",
+      "provider_type": "openai-compatible",
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com/v1",
+      "base_url_env": null
+    },
+    {
+      "name": "deepseek",
+      "provider_type": "openai-compatible",
+      "api_key_env": "deepseek_api_key",
+      "base_url": "https://api.deepseek.com/",
+      "base_url_env": null
+    }
+  ],
+  "models": [
+    {
+      "name": "gpt-4o-mini",
+      "provider": "openai"
+    },
+    {
+      "name": "deepseek-v4-flash",
+      "provider": "deepseek"
+    },
+    {
+      "name": "deepseek-v4-pro",
+      "provider": "deepseek"
+    }
+  ]
+}

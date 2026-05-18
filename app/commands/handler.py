@@ -65,6 +65,7 @@ class CommandHandler:
     [bold green]Runtime Config[/bold green]
 
     Model: {config.MODEL_NAME}
+    Provider: {config.PROVIDER}
     Temperature: {config.TEMPERATURE}
     Memory Limit: {config.MAX_MEMORY_MESSAGES}
     """)
@@ -76,6 +77,7 @@ class CommandHandler:
     [bold green]Agent Status[/bold green]
 
     Emotion: {status.emotion}
+    Provider: {status.provider}
     Model: {status.model_name}
     Memory Messages: {status.memory_messages}
     """)
