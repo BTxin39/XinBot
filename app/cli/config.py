@@ -26,6 +26,7 @@ Provider: {config.provider}
 Model: {config.model_name}
 Temperature: {config.temperature}
 Memory Limit: {config.max_memory_messages}
+Current Memory Name: {config.current_memory_name}
 """)
 
 

@@ -14,11 +14,14 @@ from app.events.events import (
 from app.events.listeners import (
     on_emotion_changed
 )
+from app.config.validation import validate_config
 
 class Agent:
 
     def __init__(self, config: RuntimeConfig | None = None):
         self.config = config or RuntimeConfig.load()
+        # 在初始化LLM客户端之前验证配置
+        validate_config(self.config)
         self.llm = LLMClient(self.config)
         self.memory = ChatMemory(self.config)
         self.state = AgentState()

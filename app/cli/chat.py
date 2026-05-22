@@ -1,6 +1,7 @@
 from rich.console import Console
 from app.agent.agent import Agent
 from app.commands.handler import CommandHandler
+from app.config.validation import validate_config
 import typer
 
 chat_app = typer.Typer()
@@ -66,6 +67,9 @@ def start(
     if provider:
         config.provider = provider
 
+    # 在创建Agent之前进行配置验证
+    validate_config(config)
+
     agent = Agent(config)
     console.print(
         (
@@ -93,3 +97,24 @@ def start(
         ):
             print(chunk, end='', flush=True)
         print()
+
+'''
+@chat_app.callback(invoke_without_command=True)
+def single_message_chat(
+    user_input: str = typer.Option(
+        None,
+        "--user-input",
+        "-u",
+        help="Single message to send to XinBot.",
+    )
+):
+    agent = Agent()
+    console.print(
+        f"\n[bold green]XinBot >> [/bold green]", end=""
+    )
+    for chunk in agent.stream_chat(
+        user_input=user_input
+    ):
+        print(chunk, end='', flush=True)
+    print()
+'''

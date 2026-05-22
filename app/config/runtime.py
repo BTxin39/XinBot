@@ -20,6 +20,7 @@ class RuntimeConfig:
         os.getenv("XINBOT_PROVIDER")
         or "deepseek"
     )
+    current_memory_name: str = None
 
     @property
     def MODEL_NAME(self) -> str:
@@ -36,6 +37,10 @@ class RuntimeConfig:
     @property
     def PROVIDER(self) -> str:
         return self.provider
+
+    @property
+    def CURRENT_MEMORY_NAME(self) -> str:
+        return self.current_memory_name
 
     @classmethod
     def load(cls) -> "RuntimeConfig":
@@ -54,6 +59,10 @@ class RuntimeConfig:
                 config.max_memory_messages,
             ),
             provider=data.get("provider", config.provider),
+            current_memory_name=data.get(
+                "current_memory_name",
+                config.current_memory_name,
+            ),
         )
 
     def save(self) -> None:
