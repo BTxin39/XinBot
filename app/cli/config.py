@@ -1,7 +1,10 @@
 import typer
 from rich.console import Console
+from rich.markup import escape
 
 from app.config.runtime import RuntimeConfig
+from app.config.ui_settings import UISettings
+from app.config.validation import validate_config
 from app.llm.providers.factory import (
     list_provider_types,
     list_providers,
@@ -30,6 +33,51 @@ Current Memory Name: {config.current_memory_name}
 """)
 
 
+@config_app.command("ui-show")
+def show_ui_config():
+    settings = UISettings.load()
+    console.print(f"""
+[bold green]UI Settings[/bold green]
+
+History Display Lines: {settings.history_display_lines}
+""")
+    for emotion, picture in settings.emotion_pictures.items():
+        console.print(f"{emotion}: {escape(picture)}")
+
+
+@config_app.command("ui-history-lines")
+def set_ui_history_lines(lines: int):
+    if lines < 0:
+        console.print("[red]History lines must be >= 0[/red]")
+        raise typer.Exit(code=1)
+
+    settings = UISettings.load()
+    settings.history_display_lines = lines
+    settings.save()
+    console.print(
+        f"[green]History display lines set to {lines}[/green]"
+    )
+
+
+@config_app.command("ui-picture")
+def set_ui_picture(
+    emotion: str,
+    picture: str = typer.Argument(
+        ...,
+        help="Picture placeholder, for example [picture_happy].",
+    ),
+):
+    settings = UISettings.load()
+    settings.emotion_pictures[emotion] = picture
+    settings.save()
+    console.print(
+        (
+            f"[green]Picture for {emotion} set to "
+            f"{escape(picture)}[/green]"
+        )
+    )
+
+
 @config_app.command("set-model")
 def set_model(model_name: str):
     registry = LLMRegistry()
@@ -46,6 +94,15 @@ def set_model(model_name: str):
     config = RuntimeConfig.load()
     config.model_name = model_name
     config.provider = model.provider
+    # 验证配置的有效性
+    try:
+        validate_config(config)
+    except ValueError:
+        console.print(
+            f"[red]Configuration would be invalid with model {model_name}.[/red]"
+        )
+        raise typer.Exit(code=1)
+    
     config.save()
     console.print(
         (
@@ -70,6 +127,15 @@ def set_provider(provider_name: str):
 
     config = RuntimeConfig.load()
     config.provider = provider_name
+    # 验证配置的有效性
+    try:
+        validate_config(config)
+    except ValueError:
+        console.print(
+            f"[red]Configuration would be invalid with provider {provider_name}.[/red]"
+        )
+        raise typer.Exit(code=1)
+    
     config.save()
     console.print(
         f"[green]Provider set to {provider_name}[/green]"
@@ -105,17 +171,17 @@ def add_provider(
     ),
     api_key_env: str = typer.Option(
         ...,
-        "--api-key-env",
+        "--api_key_env",
         help="Environment variable that stores the API key.",
     ),
     base_url_env: str | None = typer.Option(
         None,
-        "--base-url-env",
+        "--base_url_env",
         help="Environment variable that stores the base URL.",
     ),
     base_url: str | None = typer.Option(
         None,
-        "--base-url",
+        "--base_url",
         help="Base URL for OpenAI-compatible providers.",
     ),
 ):

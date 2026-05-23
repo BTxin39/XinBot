@@ -8,7 +8,7 @@ console = Console()
 @version_app.callback(invoke_without_command=True)
 def version():
     agent = AgentState()
-    console.print(f"""
+    console.print(r"""
 [bold green]                                             
           ,--.        ,--.            ,--.   
 ,--.  ,--.`--',--,--, |  |-.  ,---. ,-'  '-. 
@@ -16,7 +16,7 @@ def version():
  /  /.  \ |  ||  ||  || `-' |' '-' '  |  |   
 '--'  '--'`--'`--''--' `---'  `---'   `--'   
 [/bold green]
-                                   
+
 [pink]version: [/pink]0.0.1
 [pink]github: [/pink]https://github.com/BTxin39
 

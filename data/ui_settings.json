@@ -1,0 +1,10 @@
+{
+  "history_display_lines": 6,
+  "emotion_pictures": {
+    "normal": "[picture_normal]",
+    "happy": "[picture_happy]",
+    "sad": "[picture_sad]",
+    "angry": "[picture_angry]",
+    "sleepy": "[picture_sleepy]"
+  }
+}

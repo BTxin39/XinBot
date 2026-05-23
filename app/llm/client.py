@@ -1,9 +1,12 @@
 from app.config.runtime import RuntimeConfig
+from app.config.validation import validate_config
 from app.llm.providers.factory import create_provider
 
 class LLMClient:
     def __init__(self, config: RuntimeConfig | None = None):
         self.config = config or RuntimeConfig.load()
+        # 在创建提供商之前验证配置
+        validate_config(self.config)
         self.provider = create_provider(
             self.config.provider
         )

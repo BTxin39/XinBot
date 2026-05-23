@@ -20,7 +20,7 @@ class RuntimeConfig:
         os.getenv("XINBOT_PROVIDER")
         or "deepseek"
     )
-    current_memory_name: str = None
+    current_memory_name: str = "default"
 
     @property
     def MODEL_NAME(self) -> str:

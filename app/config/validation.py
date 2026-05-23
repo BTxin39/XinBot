@@ -24,12 +24,12 @@ class ConfigValidator:
         """
         errors = []
         
-        # Validate provider configuration
+        # Validate provider exists
         registry = LLMRegistry()
         provider_config = registry.get_provider(config.PROVIDER)
         
         if not provider_config:
-            errors.append(f"Invalid provider: {config.PROVIDER}")
+            errors.append(f"Provider does not exist: {config.PROVIDER}")
             return errors  # Early return since provider doesn't exist
         
         # Check if the required API key is set
@@ -45,6 +45,14 @@ class ConfigValidator:
                 # But DeepSeek requires base_url to be configured
                 if "deepseek" in provider_config.name.lower():
                     errors.append(f"Missing base URL for provider {provider_config.name}: {provider_config.base_url_env}")
+        
+        # Validate that the model belongs to the provider
+        model_config = registry.get_model(config.MODEL_NAME)
+        if not model_config:
+            errors.append(f"Model does not exist: {config.MODEL_NAME}")
+        elif model_config.provider != config.PROVIDER:
+            errors.append(f"Model '{config.MODEL_NAME}' does not belong to provider '{config.PROVIDER}'. "
+                         f"The model belongs to provider '{model_config.provider}'")
         
         return errors
     
@@ -103,5 +111,5 @@ def validate_config(config: RuntimeConfig) -> None:
         console.print("[bold red]Configuration validation failed:[/bold red]")
         for error in errors:
             console.print(f"  - {error}")
-        console.print("\n[bold yellow]Please check your environment variables.[/bold yellow]")
+        console.print("\n[bold yellow]Please check your environment variables and configuration.[/bold yellow]")
         raise ValueError("Configuration validation failed")

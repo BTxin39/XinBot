@@ -14,7 +14,7 @@ class ChatMemory(BaseMemory):
         self._load_all_memory()
         
         self.storage = self._get_or_create_memory(self.config.current_memory_name)
-        self.messages = self.storage.load()
+        self.messages = self._load_messages(self.storage)
 
     def add_message(self, role, content):
         self.messages.append(
@@ -24,7 +24,7 @@ class ChatMemory(BaseMemory):
             }
         )
         self._trim_messages()
-        self.storage.save(self.messages)
+        self._save_current_memory()
     
     def _trim_messages(self):
         self.messages = self.messages[
@@ -35,7 +35,7 @@ class ChatMemory(BaseMemory):
     
     def clear(self):
         # 保留描述信息，只清空消息
-        data = self.storage.load()
+        data = self._load_memory_data(self.storage)
         description = data.get("description", "")
         self.messages.clear()
         # 保存空消息列表但保留描述
@@ -67,22 +67,47 @@ class ChatMemory(BaseMemory):
         
         return self.storage_dict[memory_name]
 
+    def _load_memory_data(self, storage: JsonStorage) -> dict:
+        data = storage.load()
+        if isinstance(data, list):
+            return {
+                "messages": data,
+                "description": "",
+            }
+        if isinstance(data, dict):
+            return {
+                "messages": data.get("messages", []),
+                "description": data.get("description", ""),
+            }
+        return {
+            "messages": [],
+            "description": "",
+        }
+
+    def _load_messages(self, storage: JsonStorage) -> list[dict]:
+        return self._load_memory_data(storage)["messages"]
+
+    def _save_current_memory(self):
+        data = self._load_memory_data(self.storage)
+        data["messages"] = self.messages
+        self.storage.save(data)
+
     def get_memory_list(self):
         return list(self.storage_dict.keys())
         
     def switch_memory(self, memory_name: str):
         self.storage = self._get_or_create_memory(memory_name)
         self.current_memory_name = memory_name
-        self.messages = self.storage.load()
+        self.messages = self._load_messages(self.storage)
 
     def get_memory_description(self, memory_name: str):
         if memory_name in self.storage_dict:
-            data = self.storage_dict[memory_name].load()
+            data = self._load_memory_data(self.storage_dict[memory_name])
             return data.get("description", "")
         return ""
         
     def set_memory_description(self, memory_name: str, description: str):
         storage = self._get_or_create_memory(memory_name)
-        data = storage.load()
+        data = self._load_memory_data(storage)
         data["description"] = description
         storage.save(data)
