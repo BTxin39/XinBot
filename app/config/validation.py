@@ -26,10 +26,10 @@ class ConfigValidator:
         
         # Validate provider exists
         registry = LLMRegistry()
-        provider_config = registry.get_provider(config.PROVIDER)
+        provider_config = registry.get_provider(config.provider)
         
         if not provider_config:
-            errors.append(f"Provider does not exist: {config.PROVIDER}")
+            errors.append(f"Provider does not exist: {config.provider}")
             return errors  # Early return since provider doesn't exist
         
         # Check if the required API key is set
@@ -47,11 +47,11 @@ class ConfigValidator:
                     errors.append(f"Missing base URL for provider {provider_config.name}: {provider_config.base_url_env}")
         
         # Validate that the model belongs to the provider
-        model_config = registry.get_model(config.MODEL_NAME)
+        model_config = registry.get_model(config.model_name)
         if not model_config:
-            errors.append(f"Model does not exist: {config.MODEL_NAME}")
-        elif model_config.provider != config.PROVIDER:
-            errors.append(f"Model '{config.MODEL_NAME}' does not belong to provider '{config.PROVIDER}'. "
+            errors.append(f"Model does not exist: {config.model_name}")
+        elif model_config.provider != config.provider:
+            errors.append(f"Model '{config.model_name}' does not belong to provider '{config.provider}'. "
                          f"The model belongs to provider '{model_config.provider}'")
         
         return errors

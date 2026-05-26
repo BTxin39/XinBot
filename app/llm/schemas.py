@@ -1,8 +1,2 @@
-from dataclasses import dataclass
-
-@dataclass
-class ChatResponse:
-    content: str
-    prompt_tokens: int
-    completion_tokens: int
-    total_tokens: int
+# LLM-related schemas — currently no shared response types needed (streaming only).
+# Placeholder for future structured response types.

@@ -28,7 +28,7 @@ class ChatMemory(BaseMemory):
     
     def _trim_messages(self):
         self.messages = self.messages[
-            -self.config.MAX_MEMORY_MESSAGES:
+            -self.config.max_memory_messages:
         ]
     def get_message(self):
         return self.messages

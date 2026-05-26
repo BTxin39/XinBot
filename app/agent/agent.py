@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from app.agent.state import AgentState
 from app.llm.client import LLMClient
 from app.memory.chat_memory import ChatMemory
@@ -20,7 +18,6 @@ class Agent:
 
     def __init__(self, config: RuntimeConfig | None = None):
         self.config = config or RuntimeConfig.load()
-        # 在初始化LLM客户端之前验证配置
         validate_config(self.config)
         self.llm = LLMClient(self.config)
         self.memory = ChatMemory(self.config)
@@ -30,21 +27,6 @@ class Agent:
             EmotionChangedEvent,
             on_emotion_changed
         )
-        # self.system_prompt = self._load_system_prompt()
-        # self.memory.add_message(
-        #     role="system",
-        #     content=self.system_prompt
-        # )
-
-    # DEPRECATED: 从system.txt读取prompt
-    def _load_system_prompt(self) -> str:
-        prompt_path = Path(
-            "app/llm/prompts/system.txt"
-        )
-        return prompt_path.read_text(
-            encoding="utf-8"
-        )
-    
 
     def _build_messages(self):
         system_prompt = PromptBuilder.build(self.state)
@@ -56,57 +38,45 @@ class Agent:
         ]
         messages.extend(self.memory.get_message())
         return messages
-    
-    # DEPRECATED
-    def chat(self, user_input: str) -> str:
-        self.memory.add_message(
-            role="user",
-            content=user_input,
-        )
-        response = self.llm.chat(
-            messages=self.memory.get_message(),
-            model=self.config.MODEL_NAME,
-            temperature=self.config.TEMPERATURE
-        ) 
-        self.memory.add_message(
-            role="assistant",
-            content=response
-        )
-        return response
-    
-    def stream_chat(self, user_input: str):
-        # 根据能量值调整情绪
-        # self._adjust_emotion_by_energy()
-        
-        # 先将用户输入添加到内存
-        self.memory.add_message(
-            role="user",
-            content=user_input,
-        )
-        
-        # messages = self.memory.get_message()
-        messages = self._build_messages()
-        full_response = ""
 
-        for chunk in self.llm.stream_chat(
-            messages=messages,
-            model=self.config.MODEL_NAME,
-            temperature=self.config.TEMPERATURE
-        ):  # 调用LLM客户端的stream_chat方法
+    def stream_chat(self, user_input: str):
+        self._observe(user_input)
+
+        self._think()
+
+        full_response = ""
+        for chunk in self._respond():
             full_response += chunk
             yield chunk
 
-        # 当流式传输完成后，将完整的响应添加到内存
-        self.memory.add_message(
-            role="assistant",
-            content=full_response
+        self._remember(full_response)
+
+
+    def _observe(self, user_input: str) -> None:
+        """观察：将用户输入写入工作记忆。"""
+        self.memory.add_message(role="user", content=user_input)
+
+    def _think(self) -> None:
+        """思考：构建消息上下文（系统提示词 + 历史），为 LLM 调用做准备。"""
+        self._current_messages = self._build_messages()
+
+    def _respond(self):
+        """回复：调用 LLM 流式生成回复文本。"""
+        yield from self.llm.stream_chat(
+            messages=self._current_messages,
+            model=self.config.model_name,
+            temperature=self.config.temperature,
         )
+
+    def _remember(self, full_response: str) -> None:
+        """记忆：将完整回复写入长期记忆。"""
+        self.memory.add_message(role="assistant", content=full_response)
 
     def get_status(self) -> AgentStatus:
         return AgentStatus(
             emotion=self.state.emotion,
-            provider=self.config.PROVIDER,
-            model_name=self.config.MODEL_NAME,
+            provider=self.config.provider,
+            model_name=self.config.model_name,
             memory_messages=len(self.memory.get_message())
         )
     
@@ -119,17 +89,3 @@ class Agent:
                 new_emotion=new_emotion
             )
         )
-    
-    # def _adjust_emotion_by_energy(self):
-    #     """
-    #     根据能量值调整情绪
-    #     energy: 0-100
-    #     """
-    #     if self.state.energy < 20:
-    #         self.state.emotion = "sleepy"  # 能量低时困倦
-    #     elif self.state.energy > 80:
-    #         self.state.emotion = "happy"  # 能量高时开心
-    #     elif self.state.energy < 50:
-    #         self.state.emotion = "sad"  # 能量较低时难过
-    #     else:
-    #         self.state.emotion = "normal"  # 其他情况下情绪正常

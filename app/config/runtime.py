@@ -22,26 +22,6 @@ class RuntimeConfig:
     )
     current_memory_name: str = "default"
 
-    @property
-    def MODEL_NAME(self) -> str:
-        return self.model_name
-
-    @property
-    def TEMPERATURE(self) -> float:
-        return self.temperature
-
-    @property
-    def MAX_MEMORY_MESSAGES(self) -> int:
-        return self.max_memory_messages
-
-    @property
-    def PROVIDER(self) -> str:
-        return self.provider
-
-    @property
-    def CURRENT_MEMORY_NAME(self) -> str:
-        return self.current_memory_name
-
     @classmethod
     def load(cls) -> "RuntimeConfig":
         config = cls()

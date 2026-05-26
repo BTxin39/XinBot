@@ -64,10 +64,10 @@ class CommandHandler:
         console.print(f"""
     [bold green]Runtime Config[/bold green]
 
-    Model: {config.MODEL_NAME}
-    Provider: {config.PROVIDER}
-    Temperature: {config.TEMPERATURE}
-    Memory Limit: {config.MAX_MEMORY_MESSAGES}
+    Model: {config.model_name}
+    Provider: {config.provider}
+    Temperature: {config.temperature}
+    Memory Limit: {config.max_memory_messages}
     """)
     
     def _show_status(self):
