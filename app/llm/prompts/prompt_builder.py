@@ -1,4 +1,4 @@
-from app.agent.state import AgentState
+from app.core.state import AgentState
 from pathlib import Path
 import json
 

@@ -39,6 +39,57 @@
     {
       "role": "assistant",
       "content": "hi～ 你今天心情不错哦，我喜欢这种感觉。不管多少次打招呼，我都在这里温柔地回应你。"
+    },
+    {
+      "role": "user",
+      "content": "what time now"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_00_Vzj4g9rcBS5E7qrfSGMH3236",
+          "type": "function",
+          "function": {
+            "name": "get_time",
+            "arguments": "{}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "2026-05-27 21:18:19",
+      "tool_call_id": "call_00_Vzj4g9rcBS5E7qrfSGMH3236"
+    },
+    {
+      "role": "user",
+      "content": "what time now"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_00_BEO96ZsQTNrUnlKfvAKb8746",
+          "type": "function",
+          "function": {
+            "name": "get_time",
+            "arguments": "{}"
+          }
+        }
+      ],
+      "reasoning_content": "The user is asking for the current time again. I just got it in the previous call, but maybe they want a fresh check or didn't see the previous response. Let me get the time again."
+    },
+    {
+      "role": "tool",
+      "content": "2026-05-27 21:23:43",
+      "tool_call_id": "call_00_BEO96ZsQTNrUnlKfvAKb8746"
+    },
+    {
+      "role": "assistant",
+      "content": "现在是 **2026年5月27日，晚上21:23** 啦～不早了，记得适当休息哦。"
     }
   ],
   "description": ""

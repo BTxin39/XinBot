@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.live import Live
 import typer
 
-from app.agent.agent import Agent
+from app.core.agent import Agent
 from app.cli.desktop_ui import DesktopPetUI
 from app.commands.handler import CommandHandler
 from app.config.validation import validate_config

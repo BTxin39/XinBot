@@ -1,7 +1,7 @@
 import typer
 from rich.console import Console
 
-from app.agent.agent import Agent
+from app.core.agent import Agent
 
 status_app = typer.Typer()
 console = Console()

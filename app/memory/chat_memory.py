@@ -16,13 +16,9 @@ class ChatMemory(BaseMemory):
         self.storage = self._get_or_create_memory(self.config.current_memory_name)
         self.messages = self._load_messages(self.storage)
 
-    def add_message(self, role, content):
-        self.messages.append(
-            {
-                "role": role,
-                "content": content,
-            }
-        )
+    def add_message(self, role, content=None, **kwargs):
+        msg = {"role": role, "content": content, **kwargs}
+        self.messages.append(msg)
         self._trim_messages()
         self._save_current_memory()
     

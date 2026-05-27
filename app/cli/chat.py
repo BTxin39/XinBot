@@ -1,5 +1,5 @@
 from rich.console import Console
-from app.agent.agent import Agent
+from app.core.agent import Agent
 from app.commands.handler import CommandHandler
 from app.config.validation import validate_config
 import typer

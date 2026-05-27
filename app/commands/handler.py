@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from rich.console import Console
-from app.agent.agent import Agent
+from app.core.agent import Agent
 
 console = Console()
 

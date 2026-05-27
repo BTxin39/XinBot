@@ -1,4 +1,4 @@
-from app.agent.state import AgentState
+from app.core.state import AgentState
 import typer 
 from rich.console import Console
 

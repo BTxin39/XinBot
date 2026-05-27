@@ -3,7 +3,7 @@ from rich.console import Console, Group
 from rich.panel import Panel
 from rich.text import Text
 
-from app.agent.agent import Agent
+from app.core.agent import Agent
 from app.config.ui_settings import UISettings
 
 
