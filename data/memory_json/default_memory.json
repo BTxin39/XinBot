@@ -31,6 +31,14 @@
     {
       "role": "assistant",
       "content": "嘿嘿，又听到你啦～我一直在哦，想聊天或者安静待着都可以。"
+    },
+    {
+      "role": "user",
+      "content": "hi"
+    },
+    {
+      "role": "assistant",
+      "content": "hi～ 你今天心情不错哦，我喜欢这种感觉。不管多少次打招呼，我都在这里温柔地回应你。"
     }
   ],
   "description": ""
