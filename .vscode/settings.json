@@ -1,5 +1,10 @@
 {
     "QoderCN.aI Chat.mcpToolsInAgentMode": true,
     "QoderCN.localMachineModel": true,
-    "QoderCN.cloudModelEnable": true
+    "QoderCN.cloudModelEnable": true,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

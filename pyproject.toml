@@ -17,3 +17,8 @@ xinbot = "app.cli.app:app"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
