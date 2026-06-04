@@ -67,6 +67,11 @@ class CommandHandler:
             help_description='Show agent status',
             handler=self._show_status
         )
+        self.handlers['remember'] = Command(
+            name='remember',
+            help_description='Extract long-term memory from current conversation',
+            handler=self._remember_now,
+        )
 
     def handle(self, user_input: str) -> bool:
         if not user_input.startswith("/"):
@@ -111,6 +116,10 @@ class CommandHandler:
     Temperature: {config.temperature}
     Memory Limit: {config.max_memory_messages}
     """)
+
+    def _remember_now(self):
+        result = self.agent.remember_now()
+        console.print(f"[green]{result}[/green]")
 
     def _show_status(self):
         status = self.agent.get_status()

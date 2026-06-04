@@ -9,6 +9,7 @@ from app.cli.prompt import prompt_app
 from rich.console import Console
 from app.cli.start import start_app
 from app.cli.doctor import doctor_app
+from app.cli.persona import persona_app
 
 app = typer.Typer()
 console = Console()
@@ -21,6 +22,7 @@ app.add_typer(memory_app, name="memory", help="Manage chat memory")
 app.add_typer(version_app, name="version", help="Show version information")
 app.add_typer(start_app, name="start", help="Start desktop pet CLI")
 app.add_typer(doctor_app, name="doctor", help="Check XinBot configuration")
+app.add_typer(persona_app, name="persona", help="Manage AI persona")
 
 
 if __name__ == "__main__":

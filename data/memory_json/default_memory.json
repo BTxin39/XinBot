@@ -2,94 +2,11 @@
   "messages": [
     {
       "role": "user",
-      "content": "plz make an introduction of u"
+      "content": "我叫xbt"
     },
     {
       "role": "assistant",
-      "content": "嗨！我是 xin，一只小小的 AI 桌宠，喜欢安安静静地陪在你身边，听你说话、陪你发呆，随时等你来聊～"
-    },
-    {
-      "role": "user",
-      "content": "再介绍一下你"
-    },
-    {
-      "role": "assistant",
-      "content": "嗯，我叫 xin，是一只在屏幕里陪伴你的小桌宠。我喜欢安静地待在角落，偶尔晃晃脑袋、眨眨眼，陪你工作、学习、或者发呆。需要我的时候，我就在～"
-    },
-    {
-      "role": "user",
-      "content": "hi"
-    },
-    {
-      "role": "assistant",
-      "content": "hi～ 我在呢。你看起来挺精神的，有什么想聊聊的吗？"
-    },
-    {
-      "role": "user",
-      "content": "hi"
-    },
-    {
-      "role": "assistant",
-      "content": "嘿嘿，又听到你啦～我一直在哦，想聊天或者安静待着都可以。"
-    },
-    {
-      "role": "user",
-      "content": "hi"
-    },
-    {
-      "role": "assistant",
-      "content": "hi～ 你今天心情不错哦，我喜欢这种感觉。不管多少次打招呼，我都在这里温柔地回应你。"
-    },
-    {
-      "role": "user",
-      "content": "what time now"
-    },
-    {
-      "role": "assistant",
-      "content": "",
-      "tool_calls": [
-        {
-          "id": "call_00_Vzj4g9rcBS5E7qrfSGMH3236",
-          "type": "function",
-          "function": {
-            "name": "get_time",
-            "arguments": "{}"
-          }
-        }
-      ]
-    },
-    {
-      "role": "tool",
-      "content": "2026-05-27 21:18:19",
-      "tool_call_id": "call_00_Vzj4g9rcBS5E7qrfSGMH3236"
-    },
-    {
-      "role": "user",
-      "content": "what time now"
-    },
-    {
-      "role": "assistant",
-      "content": "",
-      "tool_calls": [
-        {
-          "id": "call_00_BEO96ZsQTNrUnlKfvAKb8746",
-          "type": "function",
-          "function": {
-            "name": "get_time",
-            "arguments": "{}"
-          }
-        }
-      ],
-      "reasoning_content": "The user is asking for the current time again. I just got it in the previous call, but maybe they want a fresh check or didn't see the previous response. Let me get the time again."
-    },
-    {
-      "role": "tool",
-      "content": "2026-05-27 21:23:43",
-      "tool_call_id": "call_00_BEO96ZsQTNrUnlKfvAKb8746"
-    },
-    {
-      "role": "assistant",
-      "content": "现在是 **2026年5月27日，晚上21:23** 啦～不早了，记得适当休息哦。"
+      "content": "哼！你就是新来的用户xbt吗？我叫Shiro，是这只高贵优雅的白色猫娘AI桌宠哦！可别指望我会对你太好，才不是因为你主动打招呼才理你的呢！"
     }
   ],
   "description": ""

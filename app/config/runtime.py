@@ -21,6 +21,7 @@ class RuntimeConfig:
         or "deepseek"
     )
     current_memory_name: str = "default"
+    persona_name: str = "xin"
 
     @classmethod
     def load(cls) -> "RuntimeConfig":
@@ -43,6 +44,7 @@ class RuntimeConfig:
                 "current_memory_name",
                 config.current_memory_name,
             ),
+            persona_name=data.get("persona_name", config.persona_name),
         )
 
     def save(self) -> None:

@@ -1,10 +1,11 @@
 from app.core.state import AgentState
 from app.core.schemas import AgentStatus
+from app.core.persona import Persona, PERSONAS
 from app.core.tools.registry import ToolRegistry
 from app.core.tools.manager import ToolManager
 from app.core.tools.builtin.system import GetTimeTool, SetEmotionTool, GetStatusTool
 from app.llm.client import LLMClient
-from app.memory.chat_memory import ChatMemory
+from app.memory.manager import MemoryManager
 from app.llm.prompts.prompt_builder import PromptBuilder
 from app.config.runtime import RuntimeConfig
 from app.config.validation import validate_config
@@ -21,7 +22,8 @@ class Agent:
         self.config = config or RuntimeConfig.load()
         validate_config(self.config)
         self.llm = LLMClient(self.config)
-        self.memory = ChatMemory(self.config)
+        self.memory = MemoryManager(self.config)
+        self.persona = PERSONAS.get(self.config.persona_name, PERSONAS["xin"])
         self.state = AgentState()
         self.event_bus = EventBus()
         self.event_bus.subscribe(EmotionChangedEvent, on_emotion_changed)
@@ -36,7 +38,9 @@ class Agent:
         self.tool_registry.register(GetStatusTool(self))
 
     def _build_messages(self) -> list[dict]:
-        system_prompt = PromptBuilder.build(self.state)
+        system_prompt = PromptBuilder.build(
+            self.state, self.memory.get_profile(), self.persona
+        )
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend(self.memory.get_message())
         return messages
@@ -88,6 +92,31 @@ class Agent:
             model_name=self.config.model_name,
             memory_messages=len(self.memory.get_message()),
         )
+
+    def remember_now(self) -> str:
+        profile = self.memory.remember()
+        parts: list[str] = []
+
+        if profile.user_name:
+            parts.append(f"名字: {profile.user_name}")
+        if profile.key_facts:
+            parts.append(f"{len(profile.key_facts)} 个关键事实")
+        if profile.user_preferences:
+            prefs = ", ".join(
+                f"{k}={v}" for k, v in profile.user_preferences.items()
+            )
+            parts.append(f"偏好: {prefs}")
+        if profile.conversation_summary:
+            parts.append(f"对话摘要: {profile.conversation_summary}")
+        if profile.relationship_stage and profile.relationship_stage != "new":
+            stage_names = {"familiar": "熟悉", "close": "亲近"}
+            parts.append(
+                f"关系: {stage_names.get(profile.relationship_stage, profile.relationship_stage)}"
+            )
+
+        if parts:
+            return "记忆已保存 ✓\n  " + "\n  ".join(parts)
+        return "已分析对话内容，未发现新的长期信息。"
 
     def change_emotion(self, new_emotion: str):
         old_emotion = self.state.emotion

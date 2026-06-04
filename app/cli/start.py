@@ -38,6 +38,12 @@ def run_cli(
         ui.render(agent, latest_reply)
         user_input = console.input("[bold yellow]You: [/bold yellow]")
         if user_input.lower() in ["exit", "quit"]:
+            console.print("\n[yellow]正在保存记忆...[/yellow]")
+            try:
+                result = agent.remember_now()
+                console.print(f"[dim]{result}[/dim]")
+            except Exception as e:
+                console.print(f"[yellow]记忆保存失败: {e}[/yellow]")
             break
 
         handled = command_handler.handle(user_input)
