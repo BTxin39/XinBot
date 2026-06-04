@@ -3,7 +3,9 @@ from app.core.schemas import AgentStatus
 from app.core.persona import Persona, PERSONAS
 from app.core.tools.registry import ToolRegistry
 from app.core.tools.manager import ToolManager
+from app.core.tools.guard import ToolGuard, cli_approval_callback
 from app.core.tools.builtin.system import GetTimeTool, SetEmotionTool, GetStatusTool
+from app.core.tools.builtin.file_ops import ReadFileTool, ListDirectoryTool, WriteFileTool
 from app.llm.client import LLMClient
 from app.memory.manager import MemoryManager
 from app.llm.prompts.prompt_builder import PromptBuilder
@@ -30,12 +32,18 @@ class Agent:
 
         self.tool_registry = ToolRegistry()
         self._register_builtin_tools()
-        self.tool_manager = ToolManager(self.tool_registry)
+        self.tool_manager = ToolManager(
+            self.tool_registry,
+            guard=ToolGuard(cli_approval_callback),
+        )
 
     def _register_builtin_tools(self) -> None:
         self.tool_registry.register(GetTimeTool())
         self.tool_registry.register(SetEmotionTool(self))
         self.tool_registry.register(GetStatusTool(self))
+        self.tool_registry.register(ReadFileTool())
+        self.tool_registry.register(ListDirectoryTool())
+        self.tool_registry.register(WriteFileTool())
 
     def _build_messages(self) -> list[dict]:
         system_prompt = PromptBuilder.build(
