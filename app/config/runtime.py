@@ -1,5 +1,5 @@
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 CONFIG_PATH = Path("data/runtime_config.json")
+
 
 @dataclass
 class RuntimeConfig:
@@ -22,6 +23,9 @@ class RuntimeConfig:
     )
     current_memory_name: str = "default"
     persona_name: str = "xin"
+    # MCP Server 配置列表。每个元素是 {"command": "...", "args": [...]}
+    # 例如: {"command": "python", "args": ["scripts/mock_mcp_server.py"]}
+    mcp_servers: list[dict] = field(default_factory=list)
 
     @classmethod
     def load(cls) -> "RuntimeConfig":
@@ -45,6 +49,7 @@ class RuntimeConfig:
                 config.current_memory_name,
             ),
             persona_name=data.get("persona_name", config.persona_name),
+            mcp_servers=data.get("mcp_servers", config.mcp_servers),
         )
 
     def save(self) -> None:

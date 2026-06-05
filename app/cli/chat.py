@@ -55,6 +55,7 @@ def start(
                 console.print(f"[dim]{result}[/dim]")
             except Exception as e:
                 console.print(f"[yellow]记忆保存失败: {e}[/yellow]")
+            agent.shutdown()
             break
         handled = command_handler.handle(
             user_input

@@ -4,5 +4,11 @@
   "max_memory_messages": 20,
   "provider": "deepseek",
   "current_memory_name": "default",
-  "persona_name": "shiro"
+  "persona_name": "shiro",
+  "mcp_servers": [
+    {
+      "command": "python",
+      "args": ["scripts/mock_mcp_server.py"]
+    }
+  ]
 }

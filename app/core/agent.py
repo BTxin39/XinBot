@@ -6,6 +6,8 @@ from app.core.tools.manager import ToolManager
 from app.core.tools.guard import ToolGuard, cli_approval_callback
 from app.core.tools.builtin.system import GetTimeTool, SetEmotionTool, GetStatusTool
 from app.core.tools.builtin.file_ops import ReadFileTool, ListDirectoryTool, WriteFileTool
+from app.core.tools.mcp_client import MCPClient, MCPConnectionError
+from app.core.tools.mcp_wrapper import MCPWrapperTool
 from app.llm.client import LLMClient
 from app.memory.manager import MemoryManager
 from app.llm.prompts.prompt_builder import PromptBuilder
@@ -31,7 +33,9 @@ class Agent:
         self.event_bus.subscribe(EmotionChangedEvent, on_emotion_changed)
 
         self.tool_registry = ToolRegistry()
+        self._mcp_clients: list[MCPClient] = []
         self._register_builtin_tools()
+        self._register_mcp_tools()
         self.tool_manager = ToolManager(
             self.tool_registry,
             guard=ToolGuard(cli_approval_callback),
@@ -44,6 +48,47 @@ class Agent:
         self.tool_registry.register(ReadFileTool())
         self.tool_registry.register(ListDirectoryTool())
         self.tool_registry.register(WriteFileTool())
+
+    def _register_mcp_tools(self) -> None:
+        """从配置的 MCP Server 发现并注册远端工具。
+
+        每个 MCP Server 作为独立子进程启动，通过 JSON-RPC 通信。
+        一个 Server 启动失败不影响其他 Server，也不影响 Agent 启动。
+        """
+        for server_config in self.config.mcp_servers:
+            command_list = [server_config["command"]] + server_config.get("args", [])
+            try:
+                client = MCPClient(command_list)
+                client.initialize()
+                tools = client.list_tools()
+            except MCPConnectionError as e:
+                # 一个 Server 挂了不影响 Agent 整体
+                import sys
+                print(
+                    f"\n[MCP] 无法连接 MCP Server '{server_config['command']}': {e}",
+                    file=sys.stderr,
+                )
+                continue
+
+            self._mcp_clients.append(client)
+            for tool_def in tools:
+                wrapper = MCPWrapperTool(tool_def, client)
+                self.tool_registry.register(wrapper)
+                import sys
+                print(
+                    f"\n[MCP] 已注册远端工具: {tool_def.name} "
+                    f"(来自 {' '.join(command_list)})",
+                    file=sys.stderr,
+                )
+
+    def shutdown(self):
+        """关闭所有 MCP 子进程，释放资源。
+
+        应在退出对话循环前调用。
+        """
+        for client in self._mcp_clients:
+            client.close()
+        self._mcp_clients.clear()
 
     def _build_messages(self) -> list[dict]:
         system_prompt = PromptBuilder.build(

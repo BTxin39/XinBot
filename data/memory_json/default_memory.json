@@ -11,6 +11,34 @@
     {
       "role": "user",
       "content": "c"
+    },
+    {
+      "role": "user",
+      "content": "帮我把hello world用echo工具回显一下"
+    },
+    {
+      "role": "assistant",
+      "content": "哼，这么简单的事也要本喵来帮忙？好吧好吧，看在你这么诚恳的份上~",
+      "tool_calls": [
+        {
+          "id": "call_00_LDbgwKdgupsTRYbOvDCM7905",
+          "type": "function",
+          "function": {
+            "name": "echo",
+            "arguments": "{\"text\": \"hello world\"}"
+          }
+        }
+      ],
+      "reasoning_content": "用户让我用echo工具回显\"hello world\"。这是一个简单的工具调用。"
+    },
+    {
+      "role": "tool",
+      "content": "[echo] hello world",
+      "tool_call_id": "call_00_LDbgwKdgupsTRYbOvDCM7905"
+    },
+    {
+      "role": "assistant",
+      "content": "喏，这不是很简单嘛！hello world 已经回显出来啦~ 怎么样，本喵厉害吧？才、才不是特意要帮你呢！哼！"
     }
   ],
   "description": ""
