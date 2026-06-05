@@ -50,6 +50,15 @@ class Agent:
             self.state, self.memory.get_profile(), self.persona
         )
         messages = [{"role": "system", "content": system_prompt}]
+
+        # 运行摘要：当对话超出窗口时，旧消息会被压缩成摘要注入
+        summary = self.memory.get_summary()
+        if summary:
+            messages.append({
+                "role": "system",
+                "content": f"[近期对话摘要]\n{summary}",
+            })
+
         messages.extend(self.memory.get_message())
         return messages
 

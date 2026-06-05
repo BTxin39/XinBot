@@ -17,15 +17,30 @@ class ChatMemory(BaseMemory):
         self.messages = self._load_messages(self.storage)
 
     def add_message(self, role, content=None, **kwargs):
+        """添加一条消息到工作记忆。
+
+        Returns:
+            被裁剪丢弃的消息列表。调用方可以在丢弃前做摘要等处理。
+            如果没有裁剪，返回空列表。
+        """
         msg = {"role": role, "content": content, **kwargs}
         self.messages.append(msg)
-        self._trim_messages()
+        discarded = self._trim_messages()
         self._save_current_memory()
-    
-    def _trim_messages(self):
-        self.messages = self.messages[
-            -self.config.max_memory_messages:
-        ]
+        return discarded
+
+    def _trim_messages(self) -> list[dict]:
+        """裁剪超出窗口的消息，返回被丢弃的消息。
+
+        滑动窗口策略：只保留最近 max_memory_messages 条。
+        被丢弃的消息由调用方（MemoryManager）在丢弃前做摘要处理。
+        """
+        if len(self.messages) <= self.config.max_memory_messages:
+            return []
+        excess = len(self.messages) - self.config.max_memory_messages
+        discarded = self.messages[:excess]
+        self.messages = self.messages[-self.config.max_memory_messages:]
+        return discarded
     def get_message(self):
         return self.messages
     
