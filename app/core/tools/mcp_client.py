@@ -106,14 +106,23 @@ class MCPClient:
     # ── 生命周期 ──────────────────────────────────────────────
 
     def _start_server(self):
-        """启动 MCP Server 子进程。"""
+        """启动 MCP Server 子进程。
+
+        注意：如果 command 是 "python"，自动替换为 sys.executable，
+        确保子进程使用与 XinBot 相同的 venv Python，避免依赖缺失。
+        """
+        command_list = list(self._command_list)
+        if command_list and command_list[0] == "python":
+            command_list[0] = sys.executable
+
         try:
             self._proc = subprocess.Popen(
-                self._command_list,
+                command_list,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,  # server 日志走 stderr
+                stderr=subprocess.PIPE,
                 text=True,
+                encoding="utf-8",  # 强制 UTF-8，避免 Windows GBK 乱码
             )
         except FileNotFoundError:
             raise MCPConnectionError(

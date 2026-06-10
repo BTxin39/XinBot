@@ -26,6 +26,8 @@ class RuntimeConfig:
     # MCP Server 配置列表。每个元素是 {"command": "...", "args": [...]}
     # 例如: {"command": "python", "args": ["scripts/mock_mcp_server.py"]}
     mcp_servers: list[dict] = field(default_factory=list)
+    # SQLite 数据库路径，用于存储消息记忆（默认 data/xinbot.db）
+    db_path: str = "data/xinbot.db"
 
     @classmethod
     def load(cls) -> "RuntimeConfig":
@@ -50,6 +52,7 @@ class RuntimeConfig:
             ),
             persona_name=data.get("persona_name", config.persona_name),
             mcp_servers=data.get("mcp_servers", config.mcp_servers),
+            db_path=data.get("db_path", config.db_path),
         )
 
     def save(self) -> None:

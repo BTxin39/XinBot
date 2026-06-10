@@ -1,124 +1,105 @@
+"""聊天消息记忆（工作记忆）。
+
+负责管理当前会话的对话历史，支持多 memory 切换。
+底层存储从 JSON 文件升级为 SQLite —— 增量写入，带时间戳。
+"""
+
 from app.memory.base import BaseMemory
 from app.config.runtime import RuntimeConfig
-from app.storage.json_storage import JsonStorage
-import os
+from app.storage.sqlite_store import SQLiteStore
+
 
 class ChatMemory(BaseMemory):
     def __init__(self, config: RuntimeConfig | None = None):
         self.config = config or RuntimeConfig.load()
-        self.base_path = "data/memory_json"
-        self.storage_dict: dict[str, JsonStorage] = {}   #[memory_name, json]
-        
-        os.makedirs(self.base_path, exist_ok=True)
-        
-        self._load_all_memory()
-        
-        self.storage = self._get_or_create_memory(self.config.current_memory_name)
-        self.messages = self._load_messages(self.storage)
+        db_path = getattr(self.config, "db_path", "") or "data/xinbot.db"
+        self._store = SQLiteStore(db_path)
+
+        # 首次启动：从旧 JSON 文件迁移
+        self._store.migrate_from_json()
+
+        # 当前活跃的 memory
+        self._current_memory_name = self.config.current_memory_name
+        # 内存缓存：最近的消息
+        self.messages: list[dict] = self._store.get_messages(
+            self._current_memory_name,
+            limit=self.config.max_memory_messages,
+        )
+
+    # ── 消息操作 ───────────────────────────────────────────────
 
     def add_message(self, role, content=None, **kwargs):
-        """添加一条消息到工作记忆。
+        """添加一条消息。
+
+        写入流程：
+        1. SQLite INSERT（持久化）
+        2. 内存列表追加
+        3. 裁剪溢出消息（SQLite + 内存同步）
 
         Returns:
-            被裁剪丢弃的消息列表。调用方可以在丢弃前做摘要等处理。
-            如果没有裁剪，返回空列表。
+            被裁剪丢弃的消息列表。
         """
         msg = {"role": role, "content": content, **kwargs}
+        # 持久化：只 INSERT 一行
+        self._store.insert_message(self._current_memory_name, msg)
+        # 内存：追加
         self.messages.append(msg)
+        # 裁剪
         discarded = self._trim_messages()
-        self._save_current_memory()
         return discarded
 
     def _trim_messages(self) -> list[dict]:
-        """裁剪超出窗口的消息，返回被丢弃的消息。
+        """裁剪超出窗口的消息，SQLite 和内存同步删除。
 
-        滑动窗口策略：只保留最近 max_memory_messages 条。
-        被丢弃的消息由调用方（MemoryManager）在丢弃前做摘要处理。
+        返回被丢弃的消息列表，交给调用方做摘要处理。
         """
         if len(self.messages) <= self.config.max_memory_messages:
             return []
-        excess = len(self.messages) - self.config.max_memory_messages
-        discarded = self.messages[:excess]
-        self.messages = self.messages[-self.config.max_memory_messages:]
+
+        # SQLite 删除旧消息 + 返回被删内容（一次操作）
+        discarded = self._store.delete_oldest(
+            self._current_memory_name,
+            keep=self.config.max_memory_messages,
+        )
+        # 内存同步裁剪
+        cut = len(self.messages) - self.config.max_memory_messages
+        self.messages = self.messages[cut:]
         return discarded
-    def get_message(self):
+
+    def get_message(self) -> list[dict]:
+        """返回当前内存中的所有消息。"""
         return self.messages
-    
+
     def clear(self):
-        # 保留描述信息，只清空消息
-        data = self._load_memory_data(self.storage)
-        description = data.get("description", "")
+        """清空当前 memory 的所有消息（SQLite + 内存）。"""
+        self._store.clear_messages(self._current_memory_name)
         self.messages.clear()
-        # 保存空消息列表但保留描述
-        self.storage.save({
-            "messages": [],
-            "description": description
-        })
 
-    def _load_all_memory(self):
-        os.makedirs(self.base_path, exist_ok=True)
-        all_items = os.listdir(self.base_path)
-        for file in all_items:
-            if file.endswith("_memory.json"):
-                memory_name = file.replace("_memory.json", "")
-                self._load_memory(memory_name)
+    # ── Memory 管理 ────────────────────────────────────────────
 
-    def _load_memory(self, memory_name):
-        memory_path = os.path.join(self.base_path, f"{memory_name}_memory.json")
-        storage = JsonStorage(memory_path)
-        self.storage_dict[memory_name] = storage
+    def get_memory_list(self) -> list[str]:
+        """返回所有已有的 memory 名称。"""
+        names = self._store.get_memory_list()
+        # 确保当前 memory 在列表中
+        if self._current_memory_name not in names:
+            names.append(self._current_memory_name)
+        return names
 
-    def _get_or_create_memory(self, memory_name: str):
-        if memory_name not in self.storage_dict:
-            memory_path = os.path.join(self.base_path, f"{memory_name}_memory.json")
-            initial_data = {"messages": [], "description": f"Memory for {memory_name}"}
-            storage = JsonStorage(memory_path)
-            storage.save(initial_data)
-            self.storage_dict[memory_name] = storage
-        
-        return self.storage_dict[memory_name]
-
-    def _load_memory_data(self, storage: JsonStorage) -> dict:
-        data = storage.load()
-        if isinstance(data, list):
-            return {
-                "messages": data,
-                "description": "",
-            }
-        if isinstance(data, dict):
-            return {
-                "messages": data.get("messages", []),
-                "description": data.get("description", ""),
-            }
-        return {
-            "messages": [],
-            "description": "",
-        }
-
-    def _load_messages(self, storage: JsonStorage) -> list[dict]:
-        return self._load_memory_data(storage)["messages"]
-
-    def _save_current_memory(self):
-        data = self._load_memory_data(self.storage)
-        data["messages"] = self.messages
-        self.storage.save(data)
-
-    def get_memory_list(self):
-        return list(self.storage_dict.keys())
-        
     def switch_memory(self, memory_name: str):
-        self.storage = self._get_or_create_memory(memory_name)
-        self.current_memory_name = memory_name
-        self.messages = self._load_messages(self.storage)
+        """切换到另一个 memory，从 SQLite 加载该 memory 的消息。"""
+        self._current_memory_name = memory_name
+        self.messages = self._store.get_messages(
+            memory_name,
+            limit=self.config.max_memory_messages,
+        )
 
-    def get_memory_description(self, memory_name: str):
-        if memory_name in self.storage_dict:
-            data = self._load_memory_data(self.storage_dict[memory_name])
-            return data.get("description", "")
-        return ""
-        
+    def get_memory_description(self, memory_name: str) -> str:
+        return self._store.get_description(memory_name)
+
     def set_memory_description(self, memory_name: str, description: str):
-        storage = self._get_or_create_memory(memory_name)
-        data = self._load_memory_data(storage)
-        data["description"] = description
-        storage.save(data)
+        self._store.set_description(memory_name, description)
+
+    @property
+    def base_path(self) -> str:
+        """兼容旧代码（MemoryManager 用 base_path 拼接 profile 路径）。"""
+        return "data/memory_json"

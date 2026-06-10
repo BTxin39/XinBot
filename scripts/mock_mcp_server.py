@@ -125,6 +125,12 @@ METHOD_HANDLERS = {
 # ── 主循环：从 stdin 读请求，通过 stdout 写响应 ─────────────────
 
 def main():
+    # 强制 stdout/stderr 使用 UTF-8，避免 Windows GBK 导致
+    # MCPClient 解码失败（MCP 协议规范要求 UTF-8）
+    sys.stdin.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
     # 关键：所有 MCP 通信走 stdin/stdout
     # stderr 留给日志（不要把日志写到 stdout，会破坏协议！）
     print("[mock_mcp_server] started, waiting for requests...", file=sys.stderr)
