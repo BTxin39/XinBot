@@ -48,7 +48,7 @@ class UISettings:
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(asdict(self), f, ensure_ascii=False, indent=2)
 
-    def picture_for(self, emotion: str) -> str:
+    def cli_pet_picture_for(self, emotion: str) -> str:
         return self.emotion_pictures.get(
             emotion,
             self.emotion_pictures["normal"],

@@ -1,16 +1,21 @@
 from dataclasses import dataclass
 from typing import Callable
 
+
 from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 from app.core.agent import Agent
 
 console = Console()
+
 
 @dataclass
 class Command:
     name: str
     help_description: str
-    handler: Callable[[], None]
+    handler: Callable[..., None]
+    accepts_arg: bool = False
 
 
 class CommandHandler:
@@ -21,7 +26,6 @@ class CommandHandler:
 
     def add_handlers(self):
         """注册所有可用的命令处理器"""
-        # 注册内置命令
         self.handlers['help'] = Command(
             name='help',
             help_description='Show available commands',
@@ -72,15 +76,27 @@ class CommandHandler:
             help_description='Extract long-term memory from current conversation',
             handler=self._remember_now,
         )
+        self.handlers['history'] = Command(
+            name='history',
+            help_description='Show N recent messages (e.g. /history 10)',
+            handler=self._show_history,
+            accepts_arg=True,
+        )
 
     def handle(self, user_input: str) -> bool:
         if not user_input.startswith("/"):
             return False
 
-        command = user_input[1:]
+        parts = user_input[1:].split(maxsplit=1)
+        command_name = parts[0]
+        arg = parts[1] if len(parts) > 1 else ""
 
-        if command in self.handlers:
-            self.handlers[command].handler()
+        if command_name in self.handlers:
+            cmd = self.handlers[command_name]
+            if cmd.accepts_arg:
+                cmd.handler(arg)
+            else:
+                cmd.handler()
         else:
             console.print(f"[red]UNKNOWN COMMAND[/red]")
             self._help()
@@ -132,3 +148,51 @@ class CommandHandler:
     Model: {status.model_name}
     Memory Messages: {status.memory_messages}
     """)
+
+    def _show_history(self, arg: str = ""):
+        """显示最近 N 条对话历史。
+
+        /history     → 默认 10 条
+        /history 5   → 最近 5 条
+        """
+        try:
+            count = int(arg) if arg else 10
+        except ValueError:
+            console.print(f"[red]无效参数: {arg}，请输入数字[/red]")
+            return
+
+        messages = self.agent.memory.get_message()
+        if not messages:
+            console.print("[dim]暂无对话历史。[/dim]")
+            return
+
+        recent = messages[-count:]
+        table = Table(title=f"最近 {len(recent)} 条对话", border_style="blue")
+        table.add_column("#", style="dim", width=4)
+        table.add_column("Role", style="bold cyan", width=10)
+        table.add_column("Content", style="white")
+
+        total = len(messages)
+        for i, msg in enumerate(recent):
+            idx = total - len(recent) + i + 1
+            role = msg.get("role", "?")
+            content = msg.get("content", "")
+            # 截断长内容用于展示
+            display = content[:200] + "…" if len(content) > 200 else content
+            if not display:
+                # 可能是 tool_calls 消息
+                if msg.get("tool_calls"):
+                    display = "[tool_calls]"
+                elif msg.get("tool_call_id"):
+                    display = f"[tool_result] {msg.get('tool_call_id', '')}"
+
+            role_style = {
+                "user": "[bold yellow]user[/bold yellow]",
+                "assistant": "[bold green]assistant[/bold green]",
+                "system": "[dim]system[/dim]",
+                "tool": "[magenta]tool[/magenta]",
+            }.get(role, role)
+
+            table.add_row(str(idx), role_style, display)
+
+        console.print(table)

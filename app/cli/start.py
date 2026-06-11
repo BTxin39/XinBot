@@ -34,8 +34,8 @@ def run_cli(
     ui = DesktopPetUI(console)
     latest_reply: str | None = None
 
+    ui.render(agent, latest_reply)
     while True:
-        ui.render(agent, latest_reply)
         user_input = console.input("[bold yellow]You: [/bold yellow]")
         if user_input.lower() in ["exit", "quit"]:
             console.print("\n[yellow]正在保存记忆...[/yellow]")
@@ -53,7 +53,7 @@ def run_cli(
             continue
 
         full_response = ""
-        console.clear()
+        # Live context 管理流式渲染，不需要 console.clear()——移除可避免白屏闪烁
         with Live(
             ui.build_streaming_view(
                 agent,
@@ -61,7 +61,7 @@ def run_cli(
                 current_input=user_input,
             ),
             console=console,
-            refresh_per_second=10,
+            refresh_per_second=15,
             transient=True,
         ) as live:
             for chunk in agent.stream_chat(user_input=user_input):

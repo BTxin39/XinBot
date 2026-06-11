@@ -4,7 +4,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 from app.core.agent import Agent
-from app.config.ui_settings import UISettings
+from app.config.cli_ui_settings import UISettings
 
 
 class DesktopPetUI:
@@ -34,7 +34,7 @@ class DesktopPetUI:
         latest_reply: str | None,
         current_input: str | None = None,
     ) -> Group:
-        pet_picture = self.settings.picture_for(
+        pet_picture = self.settings.cli_pet_picture_for(
             agent.state.emotion
         )
         status_line = (
@@ -66,16 +66,16 @@ class DesktopPetUI:
             border_style="blue",
         )
 
-        input_panel = Panel(
-            Text(current_input or "在下方输入内容，回车发送。"),
-            title="User Input",
-            border_style="yellow",
-        )
+        # input_panel = Panel(
+        #     Text(current_input or "在下方输入内容，回车发送。"),
+        #     title="User Input",
+        #     border_style="yellow",
+        # )
 
         return Group(
-            picture_panel,
             history_panel,
-            input_panel,
+            picture_panel,
+            # input_panel,
             reply_panel,
         )
 

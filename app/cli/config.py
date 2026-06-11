@@ -3,7 +3,7 @@ from rich.console import Console
 from rich.markup import escape
 
 from app.config.runtime import RuntimeConfig
-from app.config.ui_settings import UISettings
+from app.config.cli_ui_settings import UISettings
 from app.config.validation import validate_config
 from app.llm.providers.factory import (
     list_provider_types,

@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.table import Table
 
 from app.config.runtime import CONFIG_PATH, RuntimeConfig
-from app.config.ui_settings import UI_SETTINGS_PATH, UISettings
+from app.config.cli_ui_settings import UI_SETTINGS_PATH, UISettings
 from app.config.validation import ConfigValidator
 from app.llm.registry import LLMRegistry, REGISTRY_PATH
 from app.memory.chat_memory import ChatMemory
