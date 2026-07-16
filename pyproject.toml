@@ -28,7 +28,11 @@ include = ["app*"]
 [tool.uv]
 package = true
 
+[project.optional-dependencies]
+image = ["pillow>=11.0.0"]
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
 ]
+

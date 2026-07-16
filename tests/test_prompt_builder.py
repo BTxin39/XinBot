@@ -1,18 +1,20 @@
 import pytest
 from app.llm.prompts.prompt_builder import PromptBuilder
-from app.core.state import AgentState, EMOTIONS
-from app.core.persona import PERSONAS
+from app.core.state import AgentState
+from app.core.persona import PersonaStore
 from app.memory.profile import MemoryProfile
 
 
 class TestPromptBuilder:
     def test_build_contains_persona(self):
+        store = PersonaStore.get()
         state = AgentState()
-        prompt = PromptBuilder.build(state)
+        prompt = PromptBuilder.build(state, persona=store.get_persona("xin"))
         assert "xin" in prompt
         assert "AI 桌宠" in prompt
 
     def test_build_contains_emotion(self):
+        store = PersonaStore.get()
         state = AgentState(emotion="happy")
         prompt = PromptBuilder.build(state)
         assert "愉快" in prompt or "活泼" in prompt
@@ -34,8 +36,9 @@ class TestPromptBuilder:
         assert "关于用户的信息" not in prompt
 
     def test_build_with_different_persona(self):
+        store = PersonaStore.get()
         state = AgentState()
-        prompt = PromptBuilder.build(state, persona=PERSONAS["shiro"])
+        prompt = PromptBuilder.build(state, persona=store.get_persona("shiro"))
         assert "Shiro" in prompt
         assert "傲娇" in prompt
         assert "猫娘" in prompt
@@ -47,13 +50,15 @@ class TestPromptBuilder:
         assert "get_time" in prompt
 
     def test_build_with_mentor_persona(self):
+        store = PersonaStore.get()
         state = AgentState()
-        prompt = PromptBuilder.build(state, persona=PERSONAS["mentor"])
+        prompt = PromptBuilder.build(state, persona=store.get_persona("mentor"))
         assert "Senpai" in prompt
         assert "引导" in prompt
 
     def test_builds_for_all_emotions(self):
-        for emotion_name in EMOTIONS:
+        store = PersonaStore.get()
+        for emotion_name in store.emotions:
             state = AgentState(emotion=emotion_name)
             prompt = PromptBuilder.build(state)
             assert len(prompt) > 0

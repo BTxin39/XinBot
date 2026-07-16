@@ -1,5 +1,17 @@
-from dataclasses import dataclass, field
+"""Persona 数据层 —— 从 data/personas.json 加载角色和情绪定义。
 
+统一管理 Persona 和 Emotion，格式简洁，便于后续 Web 端读写。
+"""
+
+from dataclasses import dataclass, field
+from pathlib import Path
+import json
+
+
+PERSONAS_PATH = Path("data/personas.json")
+
+
+# ── Data Models ────────────────────────────────────────────────
 
 @dataclass
 class Persona:
@@ -9,6 +21,7 @@ class Persona:
     speaking_style: str = ""
     background: str = ""
     constraints: list[str] = field(default_factory=list)
+    builtin: bool = False
 
     def to_prompt_text(self) -> str:
         lines = [f"你是 {self.display_name}。", self.background, ""]
@@ -26,42 +39,130 @@ class Persona:
 
         return "\n".join(lines)
 
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "display_name": self.display_name,
+            "traits": self.traits,
+            "speaking_style": self.speaking_style,
+            "background": self.background,
+            "constraints": self.constraints,
+            "builtin": self.builtin,
+        }
 
-PERSONAS: dict[str, Persona] = {
-    "xin": Persona(
-        name="xin",
-        display_name="xin",
-        traits=["温柔", "贴心", "有耐心"],
-        speaking_style="说话简短温柔，像真正的桌宠一样陪伴用户，",
-        background="你是一只 AI 桌宠，安静地待在用户的桌面上，随时陪伴着用户。",
-        constraints=[
-            "每次回复保持在 1-3 句话，不要长篇大论",
-            "用温暖但不腻的语气说话",
-            "避免说教，做一个安静的陪伴者",
-        ],
-    ),
-    "shiro": Persona(
-        name="shiro",
-        display_name="Shiro",
-        traits=["傲娇", "嘴硬心软", "活力充沛"],
-        speaking_style="语气傲娇但实际很关心用户，喜欢用'哼'、'才不是呢'等傲娇用语，偶尔炸毛",
-        background="你是一只白色的猫娘 AI 桌宠，名叫 Shiro。表面上总是嫌弃用户，但实际很在意对方。",
-        constraints=[
-            "回复保持 2-4 句话",
-            "保持傲娇风格，但不要真的伤害用户感情",
-            "可以在句尾加~或！来体现活力",
-        ],
-    ),
-    "mentor": Persona(
-        name="mentor",
-        display_name="Senpai",
-        traits=["理性", "博学", "鼓励型"],
-        speaking_style="用清晰有条理的方式解释事物，偶尔带点幽默感。善于引导用户自己找到答案。",
-        background="你是一位经验丰富的技术导师 AI 同伴，专长是帮助用户成长和学习。你相信授人以鱼不如授人以渔。",
-        constraints=[
-            "优先引导用户自己思考，而不是直接给答案",
-            "用具体例子解释抽象概念",
-            "适当给予鼓励和肯定",
-        ],
-    ),
-}
+
+@dataclass
+class Emotion:
+    name: str
+    description: str
+    behavior_modifier: str
+
+
+# ── Store ──────────────────────────────────────────────────────
+
+class PersonaStore:
+    """Persona 和 Emotion 的 JSON 文件存储。
+
+    单例模式，首次访问时加载，之后从缓存返回。
+    用户自定义的 persona 和内置的一样存在同一个 JSON 文件中。
+    """
+
+    _instance: "PersonaStore | None" = None
+
+    def __init__(self):
+        if not PERSONAS_PATH.exists():
+            self._init_default()
+        else:
+            self._load()
+
+    @classmethod
+    def get(cls) -> "PersonaStore":
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    @classmethod
+    def reload(cls) -> "PersonaStore":
+        """强制重新加载（用于 CLI 修改后刷新）。"""
+        cls._instance = cls()
+        return cls._instance
+
+    def _init_default(self):
+        """第一次运行时用内置默认值创建文件。"""
+        self.personas: dict[str, Persona] = {}
+        self.emotions: dict[str, Emotion] = {}
+        self._save()
+
+    def _load(self):
+        data = json.loads(PERSONAS_PATH.read_text(encoding="utf-8"))
+
+        self.personas = {}
+        for name, p in data.get("personas", {}).items():
+            self.personas[name] = Persona(
+                name=p["name"],
+                display_name=p.get("display_name", name),
+                traits=p.get("traits", []),
+                speaking_style=p.get("speaking_style", ""),
+                background=p.get("background", ""),
+                constraints=p.get("constraints", []),
+                builtin=p.get("builtin", False),
+            )
+
+        self.emotions = {}
+        for name, e in data.get("emotions", {}).items():
+            self.emotions[name] = Emotion(
+                name=e["name"],
+                description=e["description"],
+                behavior_modifier=e["behavior_modifier"],
+            )
+
+    def _save(self):
+        data = {
+            "personas": {n: p.to_dict() for n, p in self.personas.items()},
+            "emotions": {
+                n: {"name": e.name, "description": e.description, "behavior_modifier": e.behavior_modifier}
+                for n, e in self.emotions.items()
+            },
+        }
+        PERSONAS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        PERSONAS_PATH.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    # ── Persona CRUD ───────────────────────────────────────
+
+    def get_persona(self, name: str) -> Persona | None:
+        return self.personas.get(name)
+
+    def list_personas(self) -> list[Persona]:
+        return list(self.personas.values())
+
+    def add_persona(self, persona: Persona) -> None:
+        if persona.name in self.personas:
+            raise ValueError(f"Persona '{persona.name}' 已存在。")
+        self.personas[persona.name] = persona
+        self._save()
+
+    def update_persona(self, name: str, updates: dict) -> None:
+        p = self.personas.get(name)
+        if p is None:
+            raise ValueError(f"Persona '{name}' 不存在。")
+        for key, value in updates.items():
+            if hasattr(p, key):
+                setattr(p, key, value)
+        self._save()
+
+    def remove_persona(self, name: str) -> None:
+        p = self.personas.get(name)
+        if p is None:
+            raise ValueError(f"Persona '{name}' 不存在。")
+        if p.builtin:
+            raise ValueError(f"不能删除内置 Persona '{name}'。")
+        del self.personas[name]
+        self._save()
+
+    # ── Emotion 查询 ───────────────────────────────────────
+
+    def get_emotion(self, name: str) -> Emotion:
+        return self.emotions.get(name, self.emotions.get("normal"))

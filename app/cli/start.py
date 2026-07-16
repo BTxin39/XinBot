@@ -1,24 +1,37 @@
-from rich.console import Console
-from rich.live import Live
+"""xinbot start —— 启动桌面宠物 CLI。
+
+子命令:
+    cli        → 终端 Rich UI 桌面宠物
+    fastapi    → (预留) Web 后端
+    live_2d    → (预留) Live2D 渲染
+"""
+
 import typer
 
 from app.core.agent import Agent
+from app.core.session import SessionRunner
 from app.cli.desktop_ui import DesktopPetUI
-from app.commands.handler import CommandHandler
-from app.config.validation import validate_config
+from app.cli.image_to_ascii import image_to_braille
 
-console = Console()
 start_app = typer.Typer()
 
 
 def run_cli(
     model: str | None = None,
     provider: str | None = None,
+    image: str | None = None,
+    image_width: int = 40,
 ):
+    """启动终端桌面宠物（Rich UI）。"""
+    from rich.console import Console
     from app.config.runtime import RuntimeConfig
+    from app.config.cli_ui_settings import UISettings
     from app.llm.registry import LLMRegistry
+    from app.config.validation import validate_config
 
+    console = Console()
     config = RuntimeConfig.load()
+
     if model:
         config.model_name = model
         registered_model = LLMRegistry().get_model(model)
@@ -27,77 +40,65 @@ def run_cli(
     if provider:
         config.provider = provider
 
+    # 如果指定了 --image，转成 braille art 并写入 UI 设置
+    if image:
+        try:
+            braille = image_to_braille(image, width=image_width)
+        except ImportError as e:
+            console.print(f"[yellow]{e}[/yellow]")
+            return
+        except FileNotFoundError as e:
+            console.print(f"[red]{e}[/red]")
+            return
+
+        ui = UISettings.load()
+        for emotion in ("normal", "happy", "sad", "angry", "sleepy"):
+            ui.emotion_pictures[emotion] = braille
+        ui.save()
+        console.print(f"[green]图片已转换为 braille art（宽={image_width}字符）[/green]")
+
     validate_config(config)
 
-    agent = Agent(config)
-    command_handler = CommandHandler(agent)
+    runner = SessionRunner(agent_factory=lambda: Agent(config))
     ui = DesktopPetUI(console)
-    latest_reply: str | None = None
-
-    ui.render(agent, latest_reply)
-    while True:
-        user_input = console.input("[bold yellow]You: [/bold yellow]")
-        if user_input.lower() in ["exit", "quit"]:
-            console.print("\n[yellow]正在保存记忆...[/yellow]")
-            try:
-                result = agent.remember_now()
-                console.print(f"[dim]{result}[/dim]")
-            except Exception as e:
-                console.print(f"[yellow]记忆保存失败: {e}[/yellow]")
-            agent.shutdown()
-            break
-
-        handled = command_handler.handle(user_input)
-        if handled:
-            latest_reply = "命令已处理。"
-            continue
-
-        full_response = ""
-        # Live context 管理流式渲染，不需要 console.clear()——移除可避免白屏闪烁
-        with Live(
-            ui.build_streaming_view(
-                agent,
-                "思考中...",
-                current_input=user_input,
-            ),
-            console=console,
-            refresh_per_second=15,
-            transient=True,
-        ) as live:
-            for chunk in agent.stream_chat(user_input=user_input):
-                full_response += chunk
-                live.update(
-                    ui.build_streaming_view(
-                        agent,
-                        full_response,
-                        current_input=user_input,
-                    )
-                )
-
-        latest_reply = full_response
-        ui.render(agent, latest_reply, current_input=user_input)
+    runner.run(ui)
 
 
 @start_app.callback(invoke_without_command=True)
 def cli(
     ctx: typer.Context,
     model: str | None = typer.Option(
-        None, "--model", "-m", help="Override model for this chat session."
+        None, "--model", "-m", help="Override model for this session."
     ),
     provider: str | None = typer.Option(
-        None, "--provider", "-p", help="Override provider for this chat session."
+        None, "--provider", "-p", help="Override provider for this session."
+    ),
+    image: str | None = typer.Option(
+        None, "--image", "-i", help="Convert image to braille art for the pet."
+    ),
+    image_width: int = typer.Option(
+        40, "--image-width", help="Output width in characters (default: 40)."
     ),
 ):
+    """启动 XinBot 桌面宠物 CLI。
+
+    示例:
+        xinbot start              # 启动（Q 版默认宠物）
+        xinbot start -m gpt-4.1   # 指定模型
+        xinbot start -i cat.png   # 用图片作为宠物图案
+    """
     if ctx.invoked_subcommand is not None:
         return
-    run_cli(model=model, provider=provider)
+    run_cli(model=model, provider=provider, image=image, image_width=image_width)
 
 
 @start_app.command()
 def fastapi():
-    pass
+    """(预留) 启动 FastAPI Web 后端。"""
+    print("FastAPI web server — 尚未实现。")
 
 
 @start_app.command()
 def live_2d():
-    pass
+    """(预留) 启动 Live2D 桌面渲染。"""
+    print("Live2D renderer — 尚未实现。")

@@ -1,10 +1,10 @@
 {
-  "history_display_lines": 2,
+  "history_display_lines": 6,
   "emotion_pictures": {
-    "normal": "[picture_normal]",
-    "happy": "[picture_happy]",
-    "sad": "[picture_sad]",
-    "angry": "[picture_angry]",
-    "sleepy": "[picture_sleepy]"
+    "normal": "\n   ╭──────╮\n   │ ◕  ◕ │\n   │   ω  │\n   ╰──┬┬──╯\n     ││\n    ╭┴┴╮\n    │  │\n    ╰──╯",
+    "happy": "\n   ╭──────╮\n   │ ^  ^ │\n   │  ▽   │\n   ╰──┬┬──╯\n     ││\n    ╭┴┴╮\n  ╭┐│  │╭┐\n  ╰╯╰──╯╰╯",
+    "sad": "\n   ╭──────╮\n   │ ◕  ◕ │\n   │   ‿  │\n   ╰──┬┬──╯\n     ││\n     ││\n    ╭┴┴╮\n    │  │\n    ╰──╯",
+    "angry": "\n   ╭──────╮\n   │ >  < │\n   │  へ  │\n   ╰──┬┬──╯\n     ││\n    ╭┴┴╮\n   ╭╯  ╰╮\n   │    │\n   ╰────╯",
+    "sleepy": "\n   ╭──────╮\n   │ —  — │\n   │   ~  │\n   ╰──┬┬──╯\n     ││\n     ││\n    zzz\n   zz"
   }
 }

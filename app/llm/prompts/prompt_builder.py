@@ -1,43 +1,12 @@
-from pathlib import Path
+"""System Prompt 组装器 —— 从 PersonaStore 读取数据，分层拼接 prompt。"""
 
-from app.core.state import AgentState, EMOTIONS
-from app.core.persona import Persona, PERSONAS
+from app.core.state import AgentState
+from app.core.persona import Persona, PersonaStore
 from app.memory.profile import MemoryProfile
 
 
-class PromptTemplate:
-
-    def __init__(self):
-        self.templates_dir = Path("app/llm/prompts/templates")
-        self.templates_dir.mkdir(exist_ok=True)
-        self._load_templates()
-
-    def _load_templates(self):
-        self.base_prompts = {
-            "system": self._read_template(
-                "system.txt",
-                "你是一只 AI 桌宠。你的名字叫 xin。你会温柔、简短地和用户聊天。",
-            ),
-        }
-
-    def _read_template(self, filename: str, default_content: str) -> str:
-        template_path = self.templates_dir / filename
-        if not template_path.exists():
-            template_path.write_text(default_content, encoding="utf-8")
-        return template_path.read_text(encoding="utf-8")
-
-    def get_template(self, name: str) -> str:
-        if name in self.base_prompts:
-            return self.base_prompts[name]
-        return self._read_template(f"{name}.txt", f"Default {name} template")
-
-    def update_template(self, name: str, content: str):
-        template_path = self.templates_dir / f"{name}.txt"
-        template_path.write_text(content, encoding="utf-8")
-        self.base_prompts[name] = content
-
-
 class PromptBuilder:
+    """纯函数式组装：Persona + Profile + Emotion + Tools → System Prompt。"""
 
     @staticmethod
     def build(
@@ -45,28 +14,31 @@ class PromptBuilder:
         profile: MemoryProfile | None = None,
         persona: Persona | None = None,
     ) -> str:
-        """分层组装 System Prompt，按优先级从高到低排列。"""
+        """分层组装 System Prompt。"""
+        store = PersonaStore.get()
+
         if persona is None:
-            persona = PERSONAS["xin"]
+            persona = store.get_persona("xin") or Persona(name="xin", display_name="xin")
 
         layers: list[str] = []
 
-        # Layer 1: Persona — 角色身份（最重要）
+        # Layer 1: Persona
         layers.append(persona.to_prompt_text())
 
-        # Layer 2: User Profile — 用户信息
+        # Layer 2: User Profile
         if profile:
             profile_text = profile.to_prompt_text()
             if profile_text:
                 layers.append(profile_text)
 
-        # Layer 3: Emotion — 当前情绪
-        emotion = EMOTIONS.get(state.emotion, EMOTIONS["normal"])
-        layers.append(
-            f"当前状态：{emotion.description}。{emotion.behavior_modifier}"
-        )
+        # Layer 3: Emotion
+        emotion = store.get_emotion(state.emotion)
+        if emotion:
+            layers.append(
+                f"当前状态：{emotion.description}。{emotion.behavior_modifier}"
+            )
 
-        # Layer 4: Tool Guidelines — 工具使用说明
+        # Layer 4: Tool Guidelines
         layers.append(
             "你可以使用工具来获取时间、查看状态或调整情绪。"
             "当用户询问时间或日期时，请使用 get_time 工具。"
@@ -75,11 +47,3 @@ class PromptBuilder:
         )
 
         return "\n\n".join(layers)
-
-    @staticmethod
-    def build_system_prompt(
-        state: AgentState,
-        profile: MemoryProfile | None = None,
-        persona: Persona | None = None,
-    ) -> str:
-        return PromptBuilder.build(state, profile, persona)

@@ -1,6 +1,6 @@
 from app.core.state import AgentState
 from app.core.schemas import AgentStatus
-from app.core.persona import Persona, PERSONAS
+from app.core.persona import Persona, PersonaStore
 from app.core.tools.registry import ToolRegistry
 from app.core.tools.manager import ToolManager
 from app.core.tools.guard import ToolGuard, cli_approval_callback
@@ -27,7 +27,7 @@ class Agent:
         validate_config(self.config)
         self.llm = LLMClient(self.config)
         self.memory = MemoryManager(self.config)
-        self.persona = PERSONAS.get(self.config.persona_name, PERSONAS["xin"])
+        self.persona = PersonaStore.get().get_persona(self.config.persona_name) or PersonaStore.get().get_persona("xin")
         self.state = AgentState()
         self.event_bus = EventBus()
         self.event_bus.subscribe(EmotionChangedEvent, on_emotion_changed)
@@ -189,3 +189,4 @@ class Agent:
                 new_emotion=new_emotion,
             )
         )
+

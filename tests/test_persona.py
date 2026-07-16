@@ -1,5 +1,5 @@
 import pytest
-from app.core.persona import Persona, PERSONAS
+from app.core.persona import Persona, PersonaStore
 
 
 class TestPersona:
@@ -48,26 +48,88 @@ class TestPersona:
         assert "Min" in text
         assert "性格特征" not in text
 
+    def test_to_dict(self):
+        p = Persona(
+            name="test",
+            display_name="Test",
+            traits=["a", "b"],
+            speaking_style="style",
+            background="bg",
+            constraints=["c1", "c2"],
+            builtin=True,
+        )
+        d = p.to_dict()
+        assert d["name"] == "test"
+        assert d["display_name"] == "Test"
+        assert d["traits"] == ["a", "b"]
+        assert d["builtin"] is True
 
-class TestBuiltinPersonas:
-    def test_xin_exists(self):
-        assert "xin" in PERSONAS
-        assert PERSONAS["xin"].display_name == "xin"
+
+class TestPersonaStore:
+    def test_loads_builtin_personas(self):
+        store = PersonaStore.reload()
+        assert store.get_persona("xin") is not None
+        assert store.get_persona("shiro") is not None
+        assert store.get_persona("mentor") is not None
+
+    def test_xin_is_wholesome(self):
+        store = PersonaStore.get()
+        xin = store.get_persona("xin")
+        assert xin is not None
+        assert "温柔" in xin.traits
+        assert xin.display_name == "xin"
 
     def test_shiro_is_tsundere(self):
-        shiro = PERSONAS["shiro"]
+        store = PersonaStore.get()
+        shiro = store.get_persona("shiro")
+        assert shiro is not None
         assert "傲娇" in shiro.traits
         assert "哼" in shiro.speaking_style
 
     def test_mentor_is_educational(self):
-        mentor = PERSONAS["mentor"]
+        store = PersonaStore.get()
+        mentor = store.get_persona("mentor")
+        assert mentor is not None
         assert "理性" in mentor.traits
         assert "引导" in mentor.speaking_style
 
-    def test_all_personas_are_valid(self):
-        from app.core.state import EMOTIONS
-
-        for name, persona in PERSONAS.items():
-            prompt = persona.to_prompt_text()
+    def test_all_personas_valid(self):
+        store = PersonaStore.get()
+        for p in store.list_personas():
+            prompt = p.to_prompt_text()
             assert len(prompt) > 0
-            assert persona.display_name in prompt
+            assert p.display_name in prompt
+
+    def test_list_personas_returns_all(self):
+        store = PersonaStore.get()
+        names = {p.name for p in store.list_personas()}
+        assert "xin" in names
+        assert "shiro" in names
+        assert "mentor" in names
+
+    def test_emotions_loaded(self):
+        store = PersonaStore.get()
+        assert len(store.emotions) >= 5
+        assert store.get_emotion("normal") is not None
+        e = store.get_emotion("happy")
+        assert e is not None
+        assert "愉快" in e.description or "活泼" in e.behavior_modifier
+
+    def test_add_and_remove_custom_persona(self):
+        store = PersonaStore.reload()
+        p = Persona(
+            name="__test__",
+            display_name="Test",
+            traits=["测试"],
+            background="test bg",
+            builtin=False,
+        )
+        store.add_persona(p)
+        assert store.get_persona("__test__") is not None
+        store.remove_persona("__test__")
+        assert store.get_persona("__test__") is None
+
+    def test_cannot_remove_builtin(self):
+        store = PersonaStore.get()
+        with pytest.raises(ValueError, match="内置"):
+            store.remove_persona("xin")

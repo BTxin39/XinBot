@@ -2,17 +2,13 @@ import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from app.cli.ascii_pets import Q_PETS
+
 
 UI_SETTINGS_PATH = Path("data/ui_settings.json")
 
 
-DEFAULT_EMOTION_PICTURES = {
-    "normal": "[picture_normal]",
-    "happy": "[picture_happy]",
-    "sad": "[picture_sad]",
-    "angry": "[picture_angry]",
-    "sleepy": "[picture_sleepy]",
-}
+DEFAULT_EMOTION_PICTURES = Q_PETS.copy()
 
 
 @dataclass
