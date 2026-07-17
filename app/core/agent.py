@@ -5,6 +5,7 @@ from app.core.tools.registry import ToolRegistry
 from app.core.tools.manager import ToolManager
 from app.core.tools.guard import ToolGuard, cli_approval_callback
 from app.core.tools.builtin.system import GetTimeTool, SetEmotionTool, GetStatusTool
+from app.core.tools.builtin.rag import SearchKnowledgeTool, WebSearchTool
 from app.core.tools.builtin.file_ops import ReadFileTool, ListDirectoryTool, WriteFileTool
 from app.core.tools.mcp_client import MCPClient, MCPConnectionError
 from app.core.tools.mcp_wrapper import MCPWrapperTool
@@ -48,6 +49,12 @@ class Agent:
         self.tool_registry.register(ReadFileTool())
         self.tool_registry.register(ListDirectoryTool())
         self.tool_registry.register(WriteFileTool())
+        # RAG 知识库工具
+        from app.rag.document import KnowledgeBase
+        self.tool_registry.register(SearchKnowledgeTool(KnowledgeBase(self.config)))
+        # Web 搜索工具（仅当配置启用且有内容时注册）
+        if self.config.web_search_enabled:
+            self.tool_registry.register(WebSearchTool())
 
     def _register_mcp_tools(self) -> None:
         """从配置的 MCP Server 发现并注册远端工具。
@@ -189,4 +196,5 @@ class Agent:
                 new_emotion=new_emotion,
             )
         )
+
 

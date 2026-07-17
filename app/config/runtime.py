@@ -23,6 +23,11 @@ class RuntimeConfig:
     )
     current_memory_name: str = "default"
     persona_name: str = "xin"
+    # RAG 配置
+    embedding_model: str = "text-embedding-3-small"
+    knowledge_dir: str = "data/knowledge"
+    web_search_enabled: bool = False
+    web_search_api_key: str = ""
     # MCP Server 配置列表。每个元素是 {"command": "...", "args": [...]}
     # 例如: {"command": "python", "args": ["scripts/mock_mcp_server.py"]}
     mcp_servers: list[dict] = field(default_factory=list)
@@ -51,6 +56,10 @@ class RuntimeConfig:
                 config.current_memory_name,
             ),
             persona_name=data.get("persona_name", config.persona_name),
+            embedding_model=data.get("embedding_model", config.embedding_model),
+            knowledge_dir=data.get("knowledge_dir", config.knowledge_dir),
+            web_search_enabled=data.get("web_search_enabled", config.web_search_enabled),
+            web_search_api_key=data.get("web_search_api_key", config.web_search_api_key),
             mcp_servers=data.get("mcp_servers", config.mcp_servers),
             db_path=data.get("db_path", config.db_path),
         )
@@ -59,3 +68,4 @@ class RuntimeConfig:
         CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(asdict(self), f, ensure_ascii=False, indent=2)
+

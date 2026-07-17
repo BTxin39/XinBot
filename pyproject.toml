@@ -9,10 +9,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "chromadb>=0.5.0",
+    "beautifulsoup4>=4.12",
     "fastapi>=0.136.3",
+    "markdown>=3.6",
     "mcp>=1.0.0",
     "openai>=2.36.0",
     "pydantic-settings>=2.14.1",
+    "pypdf>=5.0",
     "python-dotenv>=1.2.2",
     "rich>=15.0.0",
     "sqlalchemy>=2.0.50",
@@ -35,4 +39,5 @@ image = ["pillow>=11.0.0"]
 dev = [
     "pytest>=9.0.3",
 ]
+
 

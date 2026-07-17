@@ -6,7 +6,7 @@ from app.memory.profile import MemoryProfile
 
 
 class PromptBuilder:
-    """纯函数式组装：Persona + Profile + Emotion + Tools → System Prompt。"""
+    """纯函数式组装：Persona + Profile + Emotion + Tools + RAG → System Prompt。"""
 
     @staticmethod
     def build(
@@ -14,7 +14,6 @@ class PromptBuilder:
         profile: MemoryProfile | None = None,
         persona: Persona | None = None,
     ) -> str:
-        """分层组装 System Prompt。"""
         store = PersonaStore.get()
 
         if persona is None:
@@ -38,7 +37,13 @@ class PromptBuilder:
                 f"当前状态：{emotion.description}。{emotion.behavior_modifier}"
             )
 
-        # Layer 4: Tool Guidelines
+        # Layer 4: RAG
+        layers.append(
+            "你有本地知识库。当用户的问题可能涉及文档、技术资料时，"
+            "使用 search_knowledge 工具检索相关内容。"
+        )
+
+        # Layer 5: Tool Guidelines
         layers.append(
             "你可以使用工具来获取时间、查看状态或调整情绪。"
             "当用户询问时间或日期时，请使用 get_time 工具。"

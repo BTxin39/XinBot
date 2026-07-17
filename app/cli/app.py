@@ -10,6 +10,7 @@ from rich.console import Console
 from app.cli.start import start_app
 from app.cli.doctor import doctor_app
 from app.cli.persona import persona_app
+from app.cli.rag import rag_app
 from app.cli.debug import debug_app
 
 app = typer.Typer()
@@ -24,8 +25,10 @@ app.add_typer(version_app, name="version", help="Show version information")
 app.add_typer(start_app, name="start", help="Start desktop pet CLI")
 app.add_typer(doctor_app, name="doctor", help="Check XinBot configuration")
 app.add_typer(persona_app, name="persona", help="Manage AI persona")
+app.add_typer(rag_app, name="rag", help="Manage knowledge base (RAG)")
 app.add_typer(debug_app, name="debug", help="Start debug chat session (no Rich UI)")
 
 
 if __name__ == "__main__":
     app()
+
