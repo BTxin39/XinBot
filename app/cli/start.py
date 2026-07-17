@@ -2,8 +2,7 @@
 
 子命令:
     cli        → 终端 Rich UI 桌面宠物
-    fastapi    → (预留) Web 后端
-    live_2d    → (预留) Live2D 渲染
+    web        → FastAPI Web 后端 + (可选) Pygame 桌面宠
 """
 
 import typer
@@ -64,7 +63,7 @@ def run_cli(
     runner.run(ui)
 
 
-@start_app.callback(invoke_without_command=True)
+@start_app.command()
 def cli(
     ctx: typer.Context,
     model: str | None = typer.Option(
@@ -93,12 +92,46 @@ def cli(
 
 
 @start_app.command()
+def web(
+    dev: bool = typer.Option(False, "--dev", help="开发模式，不 serve 前端静态文件"),
+    no_pet: bool = typer.Option(True, "--no-pet", help="跳过 Pygame 桌面宠物子进程"),
+    port: int = typer.Option(8000, "--port", "-p", help="FastAPI 端口 (默认 8000)"),
+):
+    """启动 FastAPI Web 后端 (REST + WebSocket)。
+
+    开发模式:
+        xinbot start web --dev
+
+    生产模式 (serve 前端 build 产物):
+        xinbot start web
+
+    不启动桌面宠物:
+        xinbot start web --no-pet
+    """
+    import uvicorn
+    from app.web.server import app as web_app, STATIC_DIR, mount_static
+
+    if not dev and STATIC_DIR.exists():
+        mount_static()
+        print(f"[XinBot Web] 生产模式 — serve {STATIC_DIR}")
+
+    if dev:
+        print("[XinBot Web] 开发模式 — API only (前端请用 Vite :5173)")
+
+    if not no_pet:
+        print("[XinBot Web] Pygame 桌面宠物 — 尚未实现 (Phase 3)")
+
+    print(f"[XinBot Web] 启动 http://127.0.0.1:{port}")
+    uvicorn.run(web_app, host="127.0.0.1", port=port, log_level="info")
+
+
+@start_app.command(deprecated=True)
 def fastapi():
-    """(预留) 启动 FastAPI Web 后端。"""
-    print("FastAPI web server — 尚未实现。")
+    """(已废弃) 请使用 xinbot start web"""
+    print("请使用 xinbot start web 代替 xinbot start fastapi")
 
 
-@start_app.command()
+@start_app.command(deprecated=True)
 def live_2d():
-    """(预留) 启动 Live2D 桌面渲染。"""
-    print("Live2D renderer — 尚未实现。")
+    """(已废弃) Live2D 渲染已集成到 Web 前端"""
+    print("Live2D 渲染已集成到 Web 前端，请使用 xinbot start web")

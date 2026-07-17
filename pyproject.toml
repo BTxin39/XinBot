@@ -21,6 +21,10 @@ dependencies = [
     "rich>=15.0.0",
     "sqlalchemy>=2.0.50",
     "typer>=0.25.1",
+    "pygame>=2.6",
+    "uvicorn[standard]>=0.35",
+    "python-multipart>=0.0.20",
+    "aiofiles>=25.1",
 ]
 [project.scripts]
 xinbot = "app.cli.app:app"
@@ -39,5 +43,3 @@ image = ["pillow>=11.0.0"]
 dev = [
     "pytest>=9.0.3",
 ]
-
-
