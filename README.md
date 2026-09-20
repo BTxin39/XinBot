@@ -55,6 +55,10 @@ uv run xinbot start web
 
 ## 角色与外观
 
+桌宠资产统一存放在根目录 `pet/`，整个目录由 `.gitignore` 排除，不纳入发布包。
+`pet/live2d/` 为 Live2D，`pet/codexpet/` 为 Codex 精灵包，`pet/imported/` 为网页导入模型，`pet/vendor/` 为 Cubism Core。
+旧版本升级请按 [使用手册的迁移说明](docs/USER_GUIDE.md#10-常见问题与备份) 移动资产，保留内部相对路径。
+
 - 兼容原 Persona 数据，支持酒馆 Character Card V2 JSON/PNG 导入、编辑与 JSON 导出。
 - 开场白、性格、场景、示例对话和提示词进入 Agent；世界书及未知扩展保留但不执行完整酒馆规则。
 - 外观页支持 Live2D ZIP 和 Codex 8×9 精灵图包。模型和角色身份可独立绑定。

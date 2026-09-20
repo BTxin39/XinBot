@@ -343,7 +343,7 @@ aiofiles>=25.1          # 异步文件IO
 | 1 | Web 仅本地访问 (127.0.0.1:3796)，不暴露公网 |
 | 2 | 不处理多用户会话，Agent 全局单例 |
 | 3 | 前端需先 npm install + npm run build 才能生产使用 |
-| 4 | Live2D 模型由用户放入 static/models/ 目录 |
+| 4 | 桌宠资产统一放入根目录 pet/：live2d/、codexpet/、imported/、vendor/；整个 pet/ 不纳入 Git 和发布包 |
 | 5 | 桌面宠默认 ASCII 渲染，可选覆盖 PNG |
 
 ## 9. Web Companion 适配补充

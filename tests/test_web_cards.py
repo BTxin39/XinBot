@@ -50,6 +50,20 @@ def card():
         "character_book": {"entries": []}, "post_history_instructions": "Be concise"}}
 
 
+def test_pet_storage_paths():
+    from app.web.server import ROOT
+    from scripts.download_live2d import ROOT as download_root
+    assert models.MODEL_ROOT == ROOT / "pet/live2d"
+    assert models.UPLOAD_ROOT == ROOT / "pet/imported"
+    assert download_root == ROOT / "pet"
+    mounts = {route.path: Path(route.app.directory) for route in app.routes
+              if hasattr(getattr(route, "app", None), "directory")}
+    assert mounts["/models"] == models.MODEL_ROOT
+    assert mounts["/media/pets"] == models.UPLOAD_ROOT
+    assert mounts["/vendor"] == ROOT / "pet/vendor"
+    assert mounts["/codexpet"] == ROOT / "pet/codexpet"
+
+
 def test_card_roundtrip_and_prompt():
     result = validate_card(card())
     persona = Persona(name="haru", display_name="Haru", character_card=result)

@@ -11,7 +11,8 @@ wheels/
 .env
 node_modules/
 data/web_uploads/
-app/web/static/models/haru/
+/pet/
+app/web/static/models/
 app/web/static/vendor/
 app/web/static/*.log
 app/web/test-results/

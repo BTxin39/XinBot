@@ -53,7 +53,7 @@ transport is not token-by-token provider streaming.
   for local evaluation. Downloaded assets are ignored by Git. Source:
   https://github.com/Live2D/CubismWebSamples/tree/develop/Samples/Resources/Haru
 - Haru and Cubism Core are third-party licensed assets. Review the downloaded
-  `app/web/static/models/haru/LICENSE.md`, the Live2D Free Material License and
+  `pet/live2d/haru/LICENSE.md`, the Live2D Free Material License and
   Cubism SDK Release License before redistribution or commercial release:
   https://www.live2d.com/eula/live2d-free-material-license-agreement_en.html
   https://www.live2d.com/en/download/cubism-sdk/release-license/

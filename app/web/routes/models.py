@@ -23,8 +23,8 @@ from app.web.credentials import credential_name, validate_secret, write_secret
 
 router = APIRouter(prefix="/api")
 ROOT = Path(__file__).resolve().parents[3]
-MODEL_ROOT = ROOT / "app/web/static/models"
-UPLOAD_ROOT = ROOT / "data/web_uploads/pets"
+MODEL_ROOT = ROOT / "pet/live2d"
+UPLOAD_ROOT = ROOT / "pet/imported"
 
 
 class Connection(BaseModel):

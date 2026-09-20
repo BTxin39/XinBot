@@ -223,6 +223,6 @@ delete tutorial
 | 无法删除模型、角色或记忆 | 先切换到其他项；内置角色始终不能删除 |
 | 控制台提示未知命令 | 输入 `help`；此处只能管理记忆，不能执行系统命令 |
 
-迁移或升级前先停止服务，再私下备份根目录 `.env`、整个 `data/`、自行添加的 `pet/` 及 `app/web/static/models/`、`app/web/static/vendor/`。其中可能包含密钥和个人对话，禁止提交到公开仓库或放入公开发布包。
+迁移或升级前先停止服务，再私下备份根目录 `.env`、整个 `data/` 和 `pet/`。所有桌宠资产统一存放在 `pet/`：`live2d/` 存放 Live2D 模型，`codexpet/` 存放 Codex 精灵包，`imported/` 存放网页导入包，`vendor/` 存放 Cubism Core。旧版本的 `app/web/static/models/`、`app/web/static/vendor/`、`data/web_uploads/pets/` 应分别迁移到这些对应目录，保留内部相对路径；遇到同名文件先比较备份，不要直接覆盖。其中可能包含密钥和个人对话，禁止提交到公开仓库或放入公开发布包。
 
 新版本先解压到另一个目录并阅读变更说明，不要直接覆盖唯一备份。v0.1 发布包只含程序和公开默认角色，不含你的个人数据。

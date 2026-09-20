@@ -87,9 +87,10 @@ async def local_origin(request, call_next):
 
 
 ROOT = Path(__file__).resolve().parents[2]
-for url, directory in (("/models", Path(__file__).parent / "static/models"),
-                       ("/vendor", Path(__file__).parent / "static/vendor"),
+for url, directory in (("/models", ROOT / "pet/live2d"),
+                       ("/vendor", ROOT / "pet/vendor"),
                        ("/codexpet", ROOT / "pet/codexpet"),
+                       ("/media/pets", ROOT / "pet/imported"),
                        ("/media", ROOT / "data/web_uploads")):
     directory.mkdir(parents=True, exist_ok=True)
     app.mount(url, StaticFiles(directory=directory), name=url[1:])

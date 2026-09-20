@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import subprocess
 
-ROOT = Path(__file__).resolve().parents[1] / "app/web/static"
+ROOT = Path(__file__).resolve().parents[1] / "pet"
 BASE = "https://raw.githubusercontent.com/Live2D/CubismWebSamples/develop/"
 
 
@@ -15,7 +15,7 @@ def download(url, target):
 
 
 def main():
-    model_dir = ROOT / "models/haru"
+    model_dir = ROOT / "live2d/haru"
     model_base = BASE + "Samples/Resources/Haru/"
     download(model_base + "Haru.model3.json", model_dir / "Haru.model3.json")
     refs = json.loads((model_dir / "Haru.model3.json").read_text())["FileReferences"]
