@@ -112,6 +112,10 @@ class Agent:
             })
 
         messages.extend(self.memory.get_message())
+        if self.persona:
+            instructions = self.persona.character_card.get("data", {}).get("post_history_instructions", "")
+            if instructions:
+                messages.append({"role": "system", "content": self.persona.render_macros(instructions)})
         return messages
 
     def stream_chat(self, user_input: str):

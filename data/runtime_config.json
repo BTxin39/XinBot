@@ -3,12 +3,19 @@
   "temperature": 0.7,
   "max_memory_messages": 20,
   "provider": "deepseek",
-  "current_memory_name": "default",
-  "persona_name": "shiro",
+  "current_memory_name": "web-mentor",
+  "persona_name": "mentor",
+  "embedding_model": "text-embedding-3-small",
+  "knowledge_dir": "data/knowledge",
+  "web_search_enabled": false,
+  "web_search_api_key": "",
   "mcp_servers": [
     {
       "command": "python",
-      "args": ["scripts/mcp_server_sdk_style.py"]
+      "args": [
+        "scripts/mcp_server_sdk_style.py"
+      ]
     }
-  ]
+  ],
+  "db_path": "data/xinbot.db"
 }

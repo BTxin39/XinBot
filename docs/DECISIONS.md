@@ -15,7 +15,7 @@
 
 ```
 xinbot start web
-  ├── FastAPI 后端 (主进程, :8000)
+  ├── FastAPI 后端 (主进程, :3796)
   ├── Vite 开发服务器 (子进程, :5173, 仅开发模式)
   │   └── Vue 3 前端 SPA
   ├── BongoCat 桌面悬浮窗 (子进程, pygame, 可选 --no-pet 跳过)
@@ -30,7 +30,7 @@ xinbot start web
 ```
 xinbot start web
     │
-    ├──> FastAPI :8000 ---- Agent (核心单例)
+    ├──> FastAPI :3796 ---- Agent (核心单例)
     │       ▲                  │
     │       │ REST/WS          ├─ PersonaStore (JSON)
     │       │                  ├─ KnowledgeBase (ChromaDB)
@@ -66,7 +66,7 @@ xinbot start web
 | 决策项 | 选择 |
 |--------|------|
 | 入口 | `xinbot start web` |
-| 端口 | 8000 |
+| 端口 | 3796 |
 | Agent 生命周期 | 服务级单例 |
 | 前端服务 | 开发: 代理 Vite :5173 / 生产: serve dist/ |
 
@@ -214,10 +214,10 @@ app/web/
 ```
 开发: xinbot start web --dev
   ├── Vite :5173 (HMR 热更新)
-  └── FastAPI :8000 代理 /api/* 到后端
+  └── FastAPI :3796 代理 /api/* 到后端
 
 生产: xinbot start web
-  └── FastAPI :8000 serve dist/ + /api/*
+  └── FastAPI :3796 serve dist/ + /api/*
 ```
 
 ---
@@ -340,8 +340,19 @@ aiofiles>=25.1          # 异步文件IO
 
 | # | 假设 |
 |---|------|
-| 1 | Web 仅本地访问 (127.0.0.1:8000)，不暴露公网 |
+| 1 | Web 仅本地访问 (127.0.0.1:3796)，不暴露公网 |
 | 2 | 不处理多用户会话，Agent 全局单例 |
 | 3 | 前端需先 npm install + npm run build 才能生产使用 |
 | 4 | Live2D 模型由用户放入 static/models/ 目录 |
 | 5 | 桌面宠默认 ASCII 渲染，可选覆盖 PNG |
+
+## 9. Web Companion 适配补充
+
+- Web 使用左侧常驻桌宠、右侧聊天/管理工作区；手机使用上下布局。
+- 接入真正的 Cubism Live2D 渲染和本地 Codex 8x9 精灵图模型；官方 Haru 样例仅用于本地测试，发布前须核对授权。
+- 原 Persona 格式保持兼容，新增 Character Card V2 JSON/PNG 导入、JSON 导出、完整字段编辑及角色外观绑定。
+- 切换角色使用独立消息记忆。世界书和未知扩展保留，但不执行酒馆脚本或完整世界书规则。
+- 服务商、模型 ID、API 密钥由网页管理；密钥仅保存在本机 `.env`，不回传浏览器。
+- Web 启动不依赖预先配置密钥；Agent 懒加载，危险工具默认拒绝。
+- 本阶段完成浏览器内桌宠，不包括系统级透明置顶桌面窗口。
+- 运行、测试、授权和兼容边界见 `docs/WEB_COMPANION.md`。

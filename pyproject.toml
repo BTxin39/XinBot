@@ -9,6 +9,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "pillow>=11.0.0",
     "chromadb>=0.5.0",
     "beautifulsoup4>=4.12",
     "fastapi>=0.136.3",

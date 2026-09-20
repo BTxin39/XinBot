@@ -2,6 +2,8 @@
 
 from app.core.agent import Agent
 from app.config.runtime import RuntimeConfig
+from threading import RLock
+from app.core.tools.guard import ToolGuard
 
 
 class AgentManager:
@@ -13,24 +15,31 @@ class AgentManager:
 
     _instance: Agent | None = None
     _latest_message: str = ""
+    lock = RLock()
 
     @classmethod
     def get(cls) -> Agent:
         if cls._instance is None:
             cls._instance = Agent(RuntimeConfig.load())
+            cls._instance.tool_manager._guard = ToolGuard()
+            persona = cls._instance.persona
+            if persona and not cls._instance.memory.get_message():
+                greeting = persona.character_card.get("data", {}).get("first_mes", "")
+                if greeting:
+                    cls._instance.memory.add_message(role="assistant", content=persona.render_macros(greeting))
         return cls._instance
 
     @classmethod
     def reload(cls) -> Agent:
         cls.shutdown()
-        cls._instance = Agent(RuntimeConfig.load())
-        return cls._instance
+        return cls.get()
 
     @classmethod
     def shutdown(cls) -> None:
         if cls._instance is not None:
             cls._instance.shutdown()
             cls._instance = None
+        cls._latest_message = ""
 
     @classmethod
     def get_status(cls) -> dict:

@@ -15,7 +15,10 @@
         "用温暖但不腻的语气说话",
         "避免说教，做一个安静的陪伴者"
       ],
-      "builtin": true
+      "builtin": true,
+      "character_card": {},
+      "pet_model": "",
+      "avatar": ""
     },
     "shiro": {
       "name": "shiro",
@@ -32,7 +35,10 @@
         "保持傲娇风格，但不要真的伤害用户感情",
         "可以在句尾加~或！来体现活力"
       ],
-      "builtin": true
+      "builtin": true,
+      "character_card": {},
+      "pet_model": "codex:kaguya/pet.json",
+      "avatar": ""
     },
     "mentor": {
       "name": "mentor",
@@ -49,7 +55,10 @@
         "用具体例子解释抽象概念",
         "适当给予鼓励和肯定"
       ],
-      "builtin": true
+      "builtin": true,
+      "character_card": {},
+      "pet_model": "live2d:haru/Haru.model3.json",
+      "avatar": ""
     }
   },
   "emotions": {

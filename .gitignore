@@ -9,6 +9,12 @@ wheels/
 # Virtual environments
 .venv
 .env
+node_modules/
+data/web_uploads/
+app/web/static/models/haru/
+app/web/static/vendor/
+app/web/static/*.log
+app/web/test-results/
 
 #Vibe
 .claude

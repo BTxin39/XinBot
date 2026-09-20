@@ -22,6 +22,9 @@ class Persona:
     background: str = ""
     constraints: list[str] = field(default_factory=list)
     builtin: bool = False
+    character_card: dict = field(default_factory=dict)
+    pet_model: str = ""
+    avatar: str = ""
 
     def to_prompt_text(self) -> str:
         lines = [f"你是 {self.display_name}。", self.background, ""]
@@ -37,7 +40,16 @@ class Persona:
             for c in self.constraints:
                 lines.append(f"- {c}")
 
-        return "\n".join(lines)
+        card = self.character_card.get("data", {})
+        for key, label in (("description", "角色描述"), ("personality", "性格"),
+                           ("scenario", "场景"), ("mes_example", "对话示例"),
+                           ("system_prompt", "角色指令")):
+            if card.get(key):
+                lines.append(f"{label}: {card[key]}")
+        return self.render_macros("\n".join(lines))
+
+    def render_macros(self, text: str) -> str:
+        return text.replace("{{char}}", self.display_name).replace("{{user}}", "用户")
 
     def to_dict(self) -> dict:
         return {
@@ -48,6 +60,9 @@ class Persona:
             "background": self.background,
             "constraints": self.constraints,
             "builtin": self.builtin,
+            "character_card": self.character_card,
+            "pet_model": self.pet_model,
+            "avatar": self.avatar,
         }
 
 
@@ -106,6 +121,9 @@ class PersonaStore:
                 background=p.get("background", ""),
                 constraints=p.get("constraints", []),
                 builtin=p.get("builtin", False),
+                character_card=p.get("character_card", {}),
+                pet_model=p.get("pet_model", ""),
+                avatar=p.get("avatar", ""),
             )
 
         self.emotions = {}

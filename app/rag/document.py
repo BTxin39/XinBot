@@ -87,6 +87,8 @@ class DocumentChunker:
     """滑动窗口文本分块器。"""
 
     def __init__(self, chunk_size: int = 500, overlap: int = 100):
+        if chunk_size <= 0 or not 0 <= overlap < chunk_size:
+            raise ValueError("overlap must be smaller than chunk_size")
         self.chunk_size = chunk_size
         self.overlap = overlap
 
@@ -116,9 +118,9 @@ class DocumentChunker:
             if chunk:
                 chunks.append(chunk)
 
-            start = end - self.overlap
-            if start >= len(text):
+            if end >= len(text):
                 break
+            start = max(start + 1, end - self.overlap)
 
         return chunks
 
@@ -173,7 +175,6 @@ class KnowledgeBase:
         self.store.remove(source_key)
 
         # 嵌入 + 存储
-        embeddings = self.embedder.embed_batch(chunks)
         metadatas = [
             {"source": source_key, "chunk_index": i, "filename": file_path.name}
             for i in range(len(chunks))
@@ -184,7 +185,7 @@ class KnowledgeBase:
         ]
 
         self.store.add(
-            documents=chunks,
+            chunks=chunks,
             metadatas=metadatas,
             ids=ids,
         )
@@ -233,7 +234,6 @@ class KnowledgeBase:
             source_key = f"url:{url}"
             self.store.remove(source_key)
 
-            embeddings = self.embedder.embed_batch(chunks)
             metadatas = [
                 {"source": source_key, "chunk_index": i, "filename": url}
                 for i in range(len(chunks))
@@ -242,7 +242,7 @@ class KnowledgeBase:
                 f"{self._hash(source_key)}_{i}"
                 for i in range(len(chunks))
             ]
-            self.store.add(documents=chunks, metadatas=metadatas, ids=ids)
+            self.store.add(chunks=chunks, metadatas=metadatas, ids=ids)
 
             return {"file": url, "chunks": len(chunks), "status": "ok"}
 

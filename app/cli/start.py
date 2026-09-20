@@ -95,7 +95,7 @@ def cli(
 def web(
     dev: bool = typer.Option(False, "--dev", help="开发模式，不 serve 前端静态文件"),
     no_pet: bool = typer.Option(True, "--no-pet", help="跳过 Pygame 桌面宠物子进程"),
-    port: int = typer.Option(8000, "--port", "-p", help="FastAPI 端口 (默认 8000)"),
+    port: int = typer.Option(3796, "--port", "-p", help="FastAPI 端口 (默认 3796)"),
 ):
     """启动 FastAPI Web 后端 (REST + WebSocket)。
 

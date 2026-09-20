@@ -1,85 +1,65 @@
-"""RAG 知识库管理 REST 接口。"""
-
 from pathlib import Path
-from fastapi import APIRouter, UploadFile, File
+from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException, UploadFile
+
 from app.config.runtime import RuntimeConfig
-from app.rag.document import KnowledgeBase
-from app.web.schemas import (
-    OkResponse, ErrorResponse,
-    RagSearchRequest, RagIngestUrlRequest, RagSourceData,
-)
+from app.rag.document import KnowledgeBase, DocumentLoader
+from app.web.schemas import RagSearchRequest, RagIngestUrlRequest
 
-router = APIRouter()
-_kb: KnowledgeBase | None = None
+router = APIRouter(prefix="/api/rag")
 
 
-def _get_kb() -> KnowledgeBase:
-    global _kb
-    if _kb is None:
-        _kb = KnowledgeBase(RuntimeConfig.load())
-    return _kb
+def knowledge():
+    return KnowledgeBase(RuntimeConfig.load())
 
 
-@router.get("/api/rag/sources", response_model=OkResponse)
-async def list_sources():
+@router.get("/sources")
+def list_sources():
+    return {"ok": True, "data": knowledge().list_sources()}
+
+
+@router.post("/ingest")
+def ingest_file(file: UploadFile):
+    suffix = Path(file.filename or "").suffix.lower()
+    if suffix not in DocumentLoader.SUPPORTED_EXTENSIONS | {".pdf"}:
+        raise HTTPException(422, "不支持此文档类型")
+    content = file.file.read(20 * 1024 * 1024 + 1)
+    if len(content) > 20 * 1024 * 1024:
+        raise HTTPException(413, "文档不能超过 20 MB")
+    kb = knowledge()
+    directory = Path(kb.config.knowledge_dir) / "_uploads"
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / f"{uuid4().hex}{suffix}"
+    target.write_bytes(content)
     try:
-        kb = _get_kb()
-        sources = kb.list_sources()
-        return OkResponse(data=[RagSourceData(**s).model_dump() for s in sources])
-    except Exception as e:
-        return ErrorResponse(error=str(e))
+        return {"ok": True, "data": kb.ingest_file(target)}
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
 
 
-@router.post("/api/rag/ingest", response_model=OkResponse)
-async def ingest_file(file: UploadFile = File(...)):
-    try:
-        kb = _get_kb()
-        upload_dir = Path(kb.config.knowledge_dir) / "_uploads"
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        file_path = upload_dir / file.filename
-        content = await file.read()
-        file_path.write_bytes(content)
-        result = kb.ingest_file(str(file_path))
-        return OkResponse(data=result)
-    except Exception as e:
-        return ErrorResponse(error=str(e))
+@router.post("/ingest-url")
+def ingest_url(body: RagIngestUrlRequest):
+    if not body.url.startswith(("https://", "http://")):
+        raise HTTPException(422, "请输入 HTTP 或 HTTPS 地址")
+    result = knowledge().ingest_url(body.url)
+    if result.get("status", "").startswith("error"):
+        raise HTTPException(422, "网页导入失败，请检查网址及知识库配置")
+    return {"ok": True, "data": result}
 
 
-@router.post("/api/rag/ingest-url", response_model=OkResponse)
-async def ingest_url(req: RagIngestUrlRequest):
-    try:
-        kb = _get_kb()
-        result = kb.ingest_url(req.url)
-        return OkResponse(data=result)
-    except Exception as e:
-        return ErrorResponse(error=str(e))
+@router.post("/search")
+def search(body: RagSearchRequest):
+    return {"ok": True, "data": knowledge().search(body.query)}
 
 
-@router.post("/api/rag/search", response_model=OkResponse)
-async def search_rag(req: RagSearchRequest):
-    try:
-        kb = _get_kb()
-        results = kb.search(req.query)
-        return OkResponse(data=results)
-    except Exception as e:
-        return ErrorResponse(error=str(e))
+@router.delete("/sources/{source_id:path}")
+def delete_source(source_id: str):
+    return {"ok": True, "data": {"removed": knowledge().remove_source(source_id)}}
 
 
-@router.delete("/api/rag/sources/{source_id}", response_model=OkResponse)
-async def delete_source(source_id: str):
-    try:
-        kb = _get_kb()
-        removed = kb.remove_source(source_id)
-        return OkResponse(data={"removed": removed})
-    except Exception as e:
-        return ErrorResponse(error=str(e))
-
-
-@router.delete("/api/rag/clear", response_model=OkResponse)
-async def clear_rag():
-    try:
-        kb = _get_kb()
-        kb.clear()
-        return OkResponse(data={"status": "cleared"})
-    except Exception as e:
-        return ErrorResponse(error=str(e))
+@router.delete("/clear")
+def clear():
+    knowledge().clear()
+    return {"ok": True, "data": {}}

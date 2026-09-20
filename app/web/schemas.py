@@ -28,7 +28,7 @@ class StatusData(BaseModel):
 # ── Chat ─────────────────────────────────────────────────
 
 class ChatRequest(BaseModel):
-    message: str = Field(..., min_length=1)
+    message: str = Field(..., min_length=1, max_length=32000, pattern=r"\S")
 
 class ChatResponse(BaseModel):
     reply: str
@@ -52,8 +52,8 @@ class ConfigData(BaseModel):
 
 class ConfigUpdateRequest(BaseModel):
     model_name: str | None = None
-    temperature: float | None = None
-    max_memory_messages: int | None = None
+    temperature: float | None = Field(default=None, ge=0, le=2)
+    max_memory_messages: int | None = Field(default=None, ge=2, le=200)
     provider: str | None = None
     persona_name: str | None = None
 
