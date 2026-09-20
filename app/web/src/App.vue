@@ -1,11 +1,12 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue';
-import { MessageCircle, UsersRound, SlidersHorizontal, Library, Box, Sparkles, X, ArrowUpRight } from 'lucide-vue-next';
+import { MessageCircle, UsersRound, SlidersHorizontal, Library, Box, Sparkles, X, ArrowUpRight, Brain, Image } from 'lucide-vue-next';
 import { state, character, refresh, report } from './state.js';
 import Live2DCanvas from './components/Live2DCanvas.vue';
 import api from './api.js';
 import './style.css';
-const links = [ ['/', MessageCircle, '对话'], ['/persona', UsersRound, '角色卡'], ['/appearance', Box, '桌宠外观'], ['/knowledge', Library, '知识库'], ['/settings', SlidersHorizontal, '模型与连接'] ];
+import './management.css';
+const links = [ ['/', MessageCircle, '对话'], ['/persona', UsersRound, '角色卡'], ['/appearance', Box, '桌宠外观'], ['/memory', Brain, '记忆'], ['/ascii', Image, '字符画'], ['/knowledge', Library, '知识库'], ['/settings', SlidersHorizontal, '模型与连接'] ];
 let timer;
 onMounted(async () => {
   try { await refresh(); } catch (error) { report(error); }

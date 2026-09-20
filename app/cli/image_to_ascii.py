@@ -47,7 +47,7 @@ def image_to_braille(image_path: str, width: int = 40) -> str:
     pixel_w = width * 2
     aspect = img.height / img.width
     pixel_h = int(pixel_w * aspect * 0.5)  # braille 垂直密度 ≈ 0.5
-    pixel_h = max(pixel_h, 1)
+    pixel_h = max(pixel_h, 4)
 
     img = img.resize((pixel_w, pixel_h), Image.LANCZOS)
 
@@ -132,9 +132,9 @@ def _dots_to_braille(dots: int) -> str:
     #   dx=1,dy=2 → dot6
     #   dx=0,dy=3 → dot7
     #   dx=1,dy=3 → dot8
-    braille_order = [0, 1, 2, 3, 4, 5, 6, 7]
+    braille_order = [0, 3, 1, 4, 2, 5, 6, 7]
     value = 0
     for i, bi in enumerate(braille_order):
-        if dots & (1 << bi):
-            value |= 1 << i
+        if dots & (1 << i):
+            value |= 1 << bi
     return chr(0x2800 + value)

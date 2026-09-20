@@ -68,6 +68,10 @@ class SQLiteStore:
             Column("description", Text, nullable=True, default=""),
         )
 
+        self._migrations = Table(
+            "memory_migrations", self.metadata,
+            Column("memory_name", String(100), primary_key=True),
+        )
         self.metadata.create_all(self.engine)
 
     # ── 消息操作 ───────────────────────────────────────────────
@@ -110,11 +114,11 @@ class SQLiteStore:
             .order_by(self._messages.c.id.asc())
         )
         if limit is not None:
-            stmt = stmt.limit(limit)
+            stmt = stmt.order_by(None).order_by(self._messages.c.id.desc()).limit(limit)
 
         with self.engine.connect() as conn:
             rows = conn.execute(stmt).fetchall()
-            return [_row_to_dict(row) for row in rows]
+            return [_row_to_dict(row) for row in (reversed(rows) if limit is not None else rows)]
 
     def delete_oldest(self, memory_name: str, keep: int) -> list[dict]:
         """删除最旧的消息，保留最近 keep 条。
@@ -171,7 +175,25 @@ class SQLiteStore:
             rows = conn.execute(
                 select(self._messages.c.memory_name).distinct()
             ).fetchall()
-            return [row[0] for row in rows]
+            metadata = conn.execute(select(self._metadata_table.c.memory_name)).fetchall()
+            return sorted({row[0] for row in [*rows, *metadata]})
+
+    def replace_messages(self, memory_name: str, messages: list[dict]):
+        with self.engine.begin() as conn:
+            conn.execute(delete(self._messages).where(self._messages.c.memory_name == memory_name))
+            if messages:
+                conn.execute(insert(self._messages), [dict(memory_name=memory_name, **message) for message in messages])
+
+    def mark_migrated(self, memory_name: str):
+        with self.engine.begin() as conn:
+            if not conn.execute(select(self._migrations).where(self._migrations.c.memory_name == memory_name)).first():
+                conn.execute(insert(self._migrations).values(memory_name=memory_name))
+
+    def delete_memory(self, memory_name: str):
+        self.mark_migrated(memory_name)
+        with self.engine.begin() as conn:
+            conn.execute(delete(self._messages).where(self._messages.c.memory_name == memory_name))
+            conn.execute(delete(self._metadata_table).where(self._metadata_table.c.memory_name == memory_name))
 
     def get_message_count(self, memory_name: str) -> int:
         """返回指定 memory 的消息数量。"""
@@ -230,6 +252,9 @@ class SQLiteStore:
         migrated_count = 0
         for file in json_path.glob("*_memory.json"):
             memory_name = file.stem.replace("_memory", "")
+            with self.engine.connect() as conn:
+                if conn.execute(select(self._migrations).where(self._migrations.c.memory_name == memory_name)).first():
+                    continue
             try:
                 data = json.loads(file.read_text(encoding="utf-8"))
                 messages = data if isinstance(data, list) else data.get("messages", [])
@@ -237,6 +262,7 @@ class SQLiteStore:
                 # 检查 SQLite 里是否已有此 memory，有则跳过
                 existing = self.get_message_count(memory_name)
                 if existing > 0:
+                    self.mark_migrated(memory_name)
                     continue
 
                 # 导入
@@ -248,6 +274,7 @@ class SQLiteStore:
                     self.set_description(memory_name, data["description"])
 
                 migrated_count += 1
+                self.mark_migrated(memory_name)
             except (json.JSONDecodeError, OSError):
                 pass
 

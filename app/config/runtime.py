@@ -33,6 +33,7 @@ class RuntimeConfig:
     mcp_servers: list[dict] = field(default_factory=list)
     # SQLite 数据库路径，用于存储消息记忆（默认 data/xinbot.db）
     db_path: str = "data/xinbot.db"
+    web_port: int = 3796
 
     @classmethod
     def load(cls) -> "RuntimeConfig":
@@ -62,6 +63,7 @@ class RuntimeConfig:
             web_search_api_key=data.get("web_search_api_key", config.web_search_api_key),
             mcp_servers=data.get("mcp_servers", config.mcp_servers),
             db_path=data.get("db_path", config.db_path),
+            web_port=data.get("web_port", config.web_port),
         )
 
     def save(self) -> None:

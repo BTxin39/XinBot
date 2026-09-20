@@ -16,6 +16,21 @@ function upload(path, file) {
 }
 const id = encodeURIComponent;
 export default {
+  registerModel: data => request('POST', '/api/models/register', data),
+  deleteModel: name => request('DELETE', `/api/models/${id(name)}`),
+  deleteProvider: name => request('DELETE', `/api/providers/${id(name)}`),
+  deleteKey: name => request('DELETE', `/api/providers/${id(name)}/key`),
+  updateKey: (name, api_key) => request('PUT', `/api/providers/${id(name)}/key`, {api_key}),
+  ollamaModels: base_url => request('POST', '/api/ollama/models', {base_url}),
+  memories: () => request('GET', '/api/memory'),
+  memory: name => request('GET', `/api/memory/${id(name)}`),
+  createMemory: data => request('POST', '/api/memory', data),
+  updateMemory: (name, data) => request('PUT', `/api/memory/${id(name)}`, data),
+  activateMemory: name => request('POST', `/api/memory/${id(name)}/activate`),
+  clearMemory: name => request('DELETE', `/api/memory/${id(name)}/messages`),
+  deleteMemory: name => request('DELETE', `/api/memory/${id(name)}`),
+  memoryCommand: (command, confirm = false) => request('POST', '/api/memory/terminal', {command, confirm}),
+  ascii: form => request('POST', '/api/ascii', form),
   getStatus: () => request('GET', '/api/status'),
   getConfig: () => request('GET', '/api/config'),
   updateConfig: data => request('POST', '/api/config', data),

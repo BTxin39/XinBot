@@ -1,6 +1,6 @@
 """Pydantic 请求/响应模型 —— 统一 API 数据格式。"""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ── 统一响应 ─────────────────────────────────────────────
@@ -51,6 +51,9 @@ class ConfigData(BaseModel):
     db_path: str
 
 class ConfigUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    web_port: int | None = Field(default=None, ge=1024, le=65535)
+    web_search_enabled: bool | None = None
     model_name: str | None = None
     temperature: float | None = Field(default=None, ge=0, le=2)
     max_memory_messages: int | None = Field(default=None, ge=2, le=200)

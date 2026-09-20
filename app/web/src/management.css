@@ -1,0 +1,12 @@
+.view-tabs { display:flex; gap:24px; padding:0 30px; border-bottom:1px solid #e3eae5; flex-shrink:0; }
+.view-tabs button { background:none; border:0; border-bottom:2px solid transparent; padding:14px 0; font-size:12px; color:#869389; }
+.view-tabs button.active { color:#376f55; border-bottom-color:#376f55; }
+.management-row { display:flex; gap:10px; align-items:center; border-bottom:1px solid #e8ede9; padding:14px 0; min-width:0; }
+.management-row strong { font-size:13px; overflow-wrap:anywhere; }
+.management-row small { display:block; font-size:11px; margin-top:5px; overflow-wrap:anywhere; }
+.rail { overflow-y:auto; }
+.rail a { flex-shrink:0; }
+@media(max-width:700px) {
+  .view-tabs { padding:0 15px; gap:20px; }
+  .management-row { flex-wrap:wrap; }
+}

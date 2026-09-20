@@ -5,6 +5,7 @@ from app.llm.registry import LLMRegistry, ProviderConfig
 
 SUPPORTED_PROVIDER_TYPES = {
     "openai-compatible": OpenAIProvider,
+    "ollama": OpenAIProvider,
 }
 
 
@@ -42,7 +43,7 @@ def create_provider_from_config(
         )
 
     return provider_class(
-        api_key=provider_config.api_key,
+        api_key=provider_config.api_key or ("ollama" if provider_config.provider_type == "ollama" else None),
         base_url=provider_config.resolved_base_url,
     )
 

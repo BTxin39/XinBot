@@ -104,8 +104,9 @@ class PersonaStore:
 
     def _init_default(self):
         """第一次运行时用内置默认值创建文件。"""
-        self.personas: dict[str, Persona] = {}
-        self.emotions: dict[str, Emotion] = {}
+        defaults = json.loads(Path(__file__).with_name("defaults.json").read_text(encoding="utf-8"))
+        self.personas = {name: Persona(**item) for name, item in defaults["personas"].items()}
+        self.emotions = {name: Emotion(**item) for name, item in defaults["emotions"].items()}
         self._save()
 
     def _load(self):

@@ -34,7 +34,7 @@ class ConfigValidator:
         
         # Check if the required API key is set
         api_key_value = provider_config.api_key
-        if not api_key_value:
+        if not api_key_value and provider_config.provider_type != "ollama":
             errors.append(f"Missing API key: {provider_config.api_key_env}")
         
         # Validate base URL if required by the provider
@@ -72,7 +72,7 @@ class ConfigValidator:
             
             # Check if API key is set
             api_key_value = provider.api_key
-            if not api_key_value:
+            if not api_key_value and provider.provider_type != "ollama":
                 errors.append(f"Missing API key: {provider.api_key_env}")
             
             # Check base URL if applicable

@@ -11,6 +11,8 @@ from starlette.exceptions import HTTPException
 from app.web.agent_manager import AgentManager
 from app.web.routes import status, chat, config, persona, rag, pet
 from app.web.routes import models
+from app.web.routes import memory, ascii_art
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 
 STATIC_DIR = Path(__file__).parent / "static" / "dist"
@@ -26,6 +28,7 @@ async def lifespan(application: FastAPI):
 
 
 app = FastAPI(title="XinBot Web", version="0.1.0", lifespan=lifespan)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,6 +47,8 @@ app.include_router(persona.router)
 app.include_router(rag.router)
 app.include_router(pet.router)
 app.include_router(models.router)
+app.include_router(memory.router)
+app.include_router(ascii_art.router)
 
 
 @app.exception_handler(HTTPException)
@@ -70,9 +75,15 @@ async def unexpected_error(request, exc):
 async def local_origin(request, call_next):
     origin = request.headers.get("origin")
     allowed = {f"http://{request.headers.get('host')}", "http://localhost:5173", "http://127.0.0.1:5173"}
-    if request.method not in ("GET", "HEAD", "OPTIONS") and origin and origin not in allowed:
+    if request.method not in ("GET", "HEAD", "OPTIONS") and (
+        (origin and origin not in allowed) or request.headers.get("sec-fetch-site") == "cross-site"
+    ):
         return JSONResponse({"ok": False, "error": "不允许来自此来源的写入请求"}, status_code=403)
-    return await call_next(request)
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 ROOT = Path(__file__).resolve().parents[2]

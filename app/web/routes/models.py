@@ -8,8 +8,10 @@ from tempfile import TemporaryDirectory
 from uuid import uuid4
 import zipfile
 import shutil
+from typing import Literal
+from urllib.parse import urlsplit
+import httpx
 
-from dotenv import set_key
 from fastapi import APIRouter, HTTPException, UploadFile
 from pydantic import BaseModel, Field, HttpUrl
 from PIL import Image
@@ -17,6 +19,7 @@ from PIL import Image
 from app.config.runtime import RuntimeConfig
 from app.llm.registry import LLMRegistry
 from app.web.agent_manager import AgentManager
+from app.web.credentials import credential_name, validate_secret, write_secret
 
 router = APIRouter(prefix="/api")
 ROOT = Path(__file__).resolve().parents[3]
@@ -29,6 +32,18 @@ class Connection(BaseModel):
     base_url: HttpUrl
     model: str = Field(min_length=1, max_length=200)
     api_key: str = Field(default="", max_length=4096)
+    provider_type: Literal["openai-compatible", "ollama"] = "openai-compatible"
+
+
+def validate_endpoint(url: str, local_only: bool = False):
+    parsed = urlsplit(url)
+    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise HTTPException(422, "接口地址不能包含用户名、密码、查询参数或片段")
+    local = parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+    if local_only and not local:
+        raise HTTPException(422, "Ollama 仅支持本机地址")
+    if parsed.scheme not in {"http", "https"} or (parsed.scheme == "http" and not local):
+        raise HTTPException(422, "远程接口必须使用 HTTPS")
 
 
 @router.get("/models")
@@ -36,6 +51,7 @@ def models():
     registry = LLMRegistry()
     return {"ok": True, "data": {
         "providers": [{"name": provider.name, "base_url": provider.resolved_base_url,
+                       "provider_type": provider.provider_type,
                        "has_key": bool(provider.api_key)} for provider in registry.list_providers()],
         "models": [asdict(model) for model in registry.list_models()],
     }}
@@ -46,23 +62,127 @@ def save_connection(body: Connection):
     with AgentManager.lock:
         registry = LLMRegistry()
         existing = registry.get_provider(body.name)
-        key_env = existing.api_key_env if existing else f"XINBOT_{body.name.upper().replace('-', '_')}_API_KEY"
+        base_url = str(body.base_url).rstrip("/")
+        validate_endpoint(base_url, body.provider_type == "ollama")
+        if body.provider_type == "ollama":
+            if not base_url.endswith("/v1"):
+                base_url += "/v1"
+        key_env = existing.api_key_env if existing else credential_name(body.name)
         model = registry.get_model(body.model)
         if model and model.provider != body.name:
             raise HTTPException(409, "模型名称已属于其他服务商")
-        if not body.api_key.strip() and not (existing and existing.api_key):
+        if body.api_key:
+            validate_secret(body.api_key)
+        if existing and existing.api_key and not body.api_key and (
+            (existing.resolved_base_url or "https://api.openai.com/v1").rstrip("/") != base_url
+            or existing.provider_type != body.provider_type
+        ):
+            raise HTTPException(409, "更改接口地址或类型时必须重新输入密钥，不能转发原有密钥")
+        if body.provider_type != "ollama" and not body.api_key and not (existing and existing.api_key):
             raise HTTPException(422, "请输入 API 密钥")
-        if body.api_key.strip():
-            set_key(str(ROOT / ".env"), key_env, body.api_key.strip())
-            os.environ[key_env] = body.api_key.strip()
+        if body.api_key:
+            if any(item.name != body.name and item.api_key_env == key_env for item in registry.list_providers()):
+                raise HTTPException(409, "此密钥由多个连接共用，请先在本机拆分环境变量")
+            write_secret(ROOT, key_env, body.api_key)
         registry.data["providers"] = [item for item in registry.data.get("providers", []) if item["name"] != body.name]
-        registry.data["providers"].append({"name": body.name, "provider_type": "openai-compatible",
-                                           "api_key_env": key_env, "base_url": str(body.base_url)})
+        registry.data["providers"].append({"name": body.name, "provider_type": body.provider_type,
+                                           "api_key_env": key_env, "base_url": base_url})
         if not model:
             registry.data.setdefault("models", []).append({"name": body.model, "provider": body.name})
         registry.save()
         AgentManager.shutdown()
     return models()
+
+
+class ModelInput(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    provider: str = Field(min_length=1, max_length=60)
+
+
+@router.post("/models/register")
+def register_model(body: ModelInput):
+    from app.llm.registry import ModelConfig
+    with AgentManager.lock:
+        registry = LLMRegistry()
+        if not registry.get_provider(body.provider):
+            raise HTTPException(404, "连接不存在")
+        registry.add_model(ModelConfig(name=body.name, provider=body.provider))
+    return models()
+
+
+@router.delete("/models/{name:path}")
+def delete_model(name: str):
+    with AgentManager.lock:
+        if RuntimeConfig.load().model_name == name:
+            raise HTTPException(409, "请先切换当前模型")
+        registry = LLMRegistry()
+        if not registry.get_model(name):
+            raise HTTPException(404, "模型不存在")
+        registry.remove_model(name)
+    return models()
+
+
+@router.delete("/providers/{name}/key")
+def delete_key(name: str):
+    with AgentManager.lock:
+        registry = LLMRegistry()
+        provider = registry.get_provider(name)
+        if not provider:
+            raise HTTPException(404, "连接不存在")
+        if any(item.name != name and item.api_key_env == provider.api_key_env for item in registry.list_providers()):
+            raise HTTPException(409, "此密钥由多个连接共用")
+        write_secret(ROOT, provider.api_key_env, None)
+        AgentManager.shutdown()
+    return models()
+
+
+class KeyInput(BaseModel):
+    api_key: str = Field(min_length=1, max_length=4096)
+
+
+@router.put("/providers/{name}/key")
+def update_key(name: str, body: KeyInput):
+    with AgentManager.lock:
+        registry = LLMRegistry()
+        provider = registry.get_provider(name)
+        if not provider:
+            raise HTTPException(404, "连接不存在")
+        if any(item.name != name and item.api_key_env == provider.api_key_env for item in registry.list_providers()):
+            raise HTTPException(409, "此密钥由多个连接共用")
+        write_secret(ROOT, provider.api_key_env, body.api_key)
+        AgentManager.shutdown()
+    return models()
+
+
+@router.delete("/providers/{name}")
+def delete_provider(name: str):
+    with AgentManager.lock:
+        registry = LLMRegistry()
+        if RuntimeConfig.load().provider == name or any(item.provider == name for item in registry.list_models()):
+            raise HTTPException(409, "请先切换当前连接并删除其模型")
+        if not registry.get_provider(name):
+            raise HTTPException(404, "连接不存在")
+        delete_key(name)
+        registry.remove_provider(name)
+    return models()
+
+
+class OllamaRequest(BaseModel):
+    base_url: HttpUrl = "http://127.0.0.1:11434"
+
+
+@router.post("/ollama/models")
+def ollama_models(body: OllamaRequest):
+    endpoint = str(body.base_url).rstrip("/").removesuffix("/v1")
+    validate_endpoint(endpoint, local_only=True)
+    try:
+        with httpx.Client(timeout=5, trust_env=False, follow_redirects=False) as client:
+            response = client.get(endpoint + "/api/tags")
+            response.raise_for_status()
+            data = response.json()
+        return {"ok": True, "data": [{"name": item["name"], "size": item.get("size", 0)} for item in data["models"]]}
+    except (httpx.HTTPError, ValueError, KeyError, TypeError):
+        raise HTTPException(502, "无法连接 Ollama，请确认本机服务已启动")
 
 
 def catalog(root: Path, prefix: str, category: str):

@@ -33,9 +33,13 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(models, "ROOT", tmp_path)
     monkeypatch.setattr(models, "UPLOAD_ROOT", tmp_path / "pets")
     monkeypatch.setattr(models, "LLMRegistry", lambda: LLMRegistry(tmp_path / "registry.json"))
-    PersonaStore.get().add_persona(Persona(name="xin", display_name="Xin", builtin=True))
-    RuntimeConfig().save()
-    with TestClient(app, raise_server_exceptions=False) as instance:
+    import app.web.routes.memory as memory_module
+    import app.web.routes.config as config_module
+    monkeypatch.setattr(memory_module, "PROFILE_ROOT", tmp_path / "profiles")
+    monkeypatch.setattr(config_module, "LLMRegistry", lambda: LLMRegistry(tmp_path / "registry.json"))
+    PersonaStore.get()
+    RuntimeConfig(db_path=str(tmp_path / "memory.db")).save()
+    with TestClient(app, base_url="http://127.0.0.1", raise_server_exceptions=False) as instance:
         yield instance
 
 
@@ -114,7 +118,8 @@ def test_invalid_inputs_and_origin(client):
 
 
 def test_keys_not_exposed(client, monkeypatch):
-    monkeypatch.setenv("XINBOT_TEST_API_KEY", "")
+    from app.web.credentials import credential_name
+    monkeypatch.delenv(credential_name("test"), raising=False)
     connection = {"name": "test", "base_url": "https://example.com/v1", "model": "test-model", "api_key": "secret-value"}
     response = client.post("/api/models", json=connection)
     assert response.status_code == 200
@@ -148,7 +153,7 @@ def test_sprite_zip(client):
 def test_chat_transport(client, monkeypatch):
     monkeypatch.setattr(AgentManager, "chat", lambda message: "Reply: " + message)
     assert client.post("/api/chat", json={"message": "hello"}).json()["data"]["reply"] == "Reply: hello"
-    with client.websocket_connect("/ws/chat") as socket:
+    with client.websocket_connect("ws://127.0.0.1/ws/chat") as socket:
         socket.send_json({"message": "hello"})
         assert socket.receive_json() == {"chunk": "Reply: hello"}
         assert socket.receive_json() == {"done": True}

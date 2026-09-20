@@ -95,7 +95,7 @@ def cli(
 def web(
     dev: bool = typer.Option(False, "--dev", help="开发模式，不 serve 前端静态文件"),
     no_pet: bool = typer.Option(True, "--no-pet", help="跳过 Pygame 桌面宠物子进程"),
-    port: int = typer.Option(3796, "--port", "-p", help="FastAPI 端口 (默认 3796)"),
+    port: int | None = typer.Option(None, "--port", "-p", min=1024, max=65535, help="覆盖配置中的 Web 端口"),
 ):
     """启动 FastAPI Web 后端 (REST + WebSocket)。
 
@@ -110,6 +110,11 @@ def web(
     """
     import uvicorn
     from app.web.server import app as web_app, STATIC_DIR, mount_static
+    from app.config.runtime import RuntimeConfig
+
+    port = port or RuntimeConfig.load().web_port
+    if not 1024 <= port <= 65535:
+        raise typer.BadParameter("Web port must be between 1024 and 65535")
 
     if not dev and STATIC_DIR.exists():
         mount_static()

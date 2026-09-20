@@ -5,10 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "xinbot"
 version = "0.1.0"
-description = "Add your description here"
+description = "Local AI companion with Live2D, character cards and memory management"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "httpx>=0.28.1",
     "pillow>=11.0.0",
     "chromadb>=0.5.0",
     "beautifulsoup4>=4.12",
@@ -33,6 +34,11 @@ xinbot = "app.cli.app:app"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+exclude = ["app.web.node_modules*", "app.web.static*", "app.web.tests*"]
+
+[tool.setuptools.package-data]
+"app.core" = ["defaults.json"]
+"app.web" = ["static/dist/*.html", "static/dist/assets/*"]
 
 [tool.uv]
 package = true
