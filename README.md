@@ -28,9 +28,6 @@ uv sync --frozen
 uv run xinbot start web
 ```
 
-打开 http://127.0.0.1:3796。发行 ZIP 已包含构建后的前端，不需要 Node.js。
-这是源码运行包，不是独立 EXE；不包含 Python、依赖、私有配置、聊天记录或第三方模型。
-
 ## 模型与密钥
 
 - 设置页添加 OpenAI-compatible 连接、API 地址、模型 ID 和密钥；可分别增删模型、轮换/删除密钥及删除空连接。
