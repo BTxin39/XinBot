@@ -12,7 +12,17 @@ from app.core.session import SessionRunner
 from app.cli.desktop_ui import DesktopPetUI
 from app.cli.image_to_ascii import image_to_braille
 
-start_app = typer.Typer()
+start_app = typer.Typer(no_args_is_help=True)
+
+
+@start_app.callback(invoke_without_command=True)
+def start(ctx: typer.Context, show: bool = typer.Option(False, "--show", help="查询网页后端运行状态")):
+    if show:
+        from app.web.process import show as show_status
+        show_status()
+        raise typer.Exit()
+    if ctx.invoked_subcommand is None:
+        print(ctx.get_help())
 
 
 def run_cli(
@@ -82,20 +92,21 @@ def cli(
     """启动 XinBot 桌面宠物 CLI。
 
     示例:
-        xinbot start              # 启动（Q 版默认宠物）
-        xinbot start -m gpt-4.1   # 指定模型
-        xinbot start -i cat.png   # 用图片作为宠物图案
+        xinbot start cli              # 启动（Q 版默认宠物）
+        xinbot start cli -m gpt-4.1    # 指定模型
+        xinbot start cli -i cat.png    # 用图片作为宠物图案
     """
     if ctx.invoked_subcommand is not None:
         return
     run_cli(model=model, provider=provider, image=image, image_width=image_width)
 
 
-@start_app.command()
+@start_app.command(help="启动网页桌宠（默认 http://127.0.0.1:3796）。")
 def web(
+    shutdown: bool = typer.Option(False, "--shutdown", help="关闭本项目启动的网页后端"),
     dev: bool = typer.Option(False, "--dev", help="开发模式，不 serve 前端静态文件"),
     no_pet: bool = typer.Option(True, "--no-pet", help="跳过 Pygame 桌面宠物子进程"),
-    port: int | None = typer.Option(None, "--port", "-p", min=1024, max=65535, help="覆盖配置中的 Web 端口"),
+    port: int | None = typer.Option(None, "--port", "-p", min=1024, max=65535, help="Web 端口，默认 3796；已保存配置时使用配置值"),
 ):
     """启动 FastAPI Web 后端 (REST + WebSocket)。
 
@@ -108,26 +119,16 @@ def web(
     不启动桌面宠物:
         xinbot start web --no-pet
     """
-    import uvicorn
-    from app.web.server import app as web_app, STATIC_DIR, mount_static
     from app.config.runtime import RuntimeConfig
-
-    port = port or RuntimeConfig.load().web_port
-    if not 1024 <= port <= 65535:
-        raise typer.BadParameter("Web port must be between 1024 and 65535")
-
-    if not dev and STATIC_DIR.exists():
-        mount_static()
-        print(f"[XinBot Web] 生产模式 — serve {STATIC_DIR}")
-
-    if dev:
-        print("[XinBot Web] 开发模式 — API only (前端请用 Vite :5173)")
-
-    if not no_pet:
-        print("[XinBot Web] Pygame 桌面宠物 — 尚未实现 (Phase 3)")
-
-    print(f"[XinBot Web] 启动 http://127.0.0.1:{port}")
-    uvicorn.run(web_app, host="127.0.0.1", port=port, log_level="info")
+    from app.web.process import launch, shutdown as stop_server
+    try:
+        if shutdown:
+            stop_server()
+            return
+        launch(port or RuntimeConfig.load().web_port, dev=dev)
+    except (RuntimeError, OSError) as error:
+        typer.echo(str(error), err=True)
+        raise typer.Exit(1)
 
 
 @start_app.command(deprecated=True)

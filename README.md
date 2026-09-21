@@ -13,6 +13,20 @@ API Key 与 Ollama 配置、角色卡与外观、记忆终端、字符画、端�
 
 ## 快速启动
 
+两个启动入口按以下顺序使用：
+
+```powershell
+xinbot start cli   # 终端桌宠
+xinbot start web   # 网页桌宠：http://127.0.0.1:3796
+xinbot start --show          # 查询运行状态、PID 和地址
+xinbot start web --shutdown  # 关闭本项目的网页后端
+```
+
+`xinbot start` 显示帮助，`web` 位于 `cli` 下方。未激活虚拟环境时使用 `uv run xinbot …`。
+`xinbot start web` 在后台启动服务并打开 `http://127.0.0.1:3796/#/`；重复执行会打开已运行的页面，不重复启动。
+关闭网页或启动终端不会停止后台服务，请使用 `--shutdown`。日志位于 `data/web.log`。
+网页地址的端口前是冒号 `:3796`，不是路径 `/3796`。
+
 需要 Python 3.12+ 和 [uv](https://docs.astral.sh/uv/getting-started/installation/)。首次安装依赖需要联网。
 
 下载并解压 `dist/XinBot-v0.1.0.zip`，在目录内运行：
@@ -131,3 +145,7 @@ uv run python scripts/package_release.py
 产物：`dist/XinBot-v0.1.0.zip`、对应 SHA256 校验文件；包内 `MANIFEST.json` 列出文件哈希。
 打包脚本使用允许清单，不读取 `.env`、`data/`、`pet/`、上传模型、日志、缓存或 `node_modules`。
 干净目录首次启动从内置公开默认角色生成数据，不携带开发者的私有角色卡。
+
+## 注意事项
+
+当前release包发布有延迟，较多问题，请直接下载源码

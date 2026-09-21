@@ -80,6 +80,8 @@ async def local_origin(request, call_next):
     ):
         return JSONResponse({"ok": False, "error": "不允许来自此来源的写入请求"}, status_code=403)
     response = await call_next(request)
+    if request.url.path in {"/", "/index.html"}:
+        response.headers["Cache-Control"] = "no-store"
     if request.url.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"

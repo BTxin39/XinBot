@@ -11,6 +11,8 @@ wheels/
 .env
 node_modules/
 data/web_uploads/
+data/web_process.json
+data/web.log
 /pet/
 app/web/static/models/
 app/web/static/vendor/
