@@ -17,5 +17,6 @@
       ]
     }
   ],
-  "db_path": "data/xinbot.db"
+  "db_path": "data/xinbot.db",
+  "web_port": 3796
 }

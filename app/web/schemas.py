@@ -1,6 +1,9 @@
 """Pydantic 请求/响应模型 —— 统一 API 数据格式。"""
 
-from pydantic import BaseModel, ConfigDict, Field
+import base64
+import binascii
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 # ── 统一响应 ─────────────────────────────────────────────
@@ -29,6 +32,21 @@ class StatusData(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=32000, pattern=r"\S")
+    thinking: bool = False
+    thinking_strength: int = Field(default=2, ge=1, le=3)
+    image: str | None = Field(default=None, max_length=2_800_000)
+
+    @field_validator("image")
+    @classmethod
+    def validate_image(cls, value):
+        if value is not None and not value.startswith(("data:image/png;base64,", "data:image/jpeg;base64,", "data:image/webp;base64,")):
+            raise ValueError("仅支持 PNG、JPEG、WebP 图片")
+        if value is not None:
+            try:
+                base64.b64decode(value.split(",", 1)[1], validate=True)
+            except (ValueError, binascii.Error) as exc:
+                raise ValueError("图片编码无效") from exc
+        return value
 
 class ChatResponse(BaseModel):
     reply: str
@@ -92,9 +110,11 @@ class PersonaUpdate(BaseModel):
 
 class RagSearchRequest(BaseModel):
     query: str = Field(..., min_length=1)
+    tags: list[str] | None = None
 
 class RagIngestUrlRequest(BaseModel):
     url: str = Field(..., min_length=1)
+    tag: str = Field(default="default", min_length=1, max_length=64)
 
 class RagSourceData(BaseModel):
     source: str

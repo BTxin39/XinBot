@@ -32,11 +32,13 @@ test('Live2D is visible, animated and responsive', async ({page}) => {
   await page.screenshot({path:'test-results/desktop.png',fullPage:true});
   await page.getByRole('button',{name:'放大',exact:true}).click();
   await page.getByRole('button',{name:'打招呼',exact:true}).click();
+  await page.getByRole('button',{name:'管理'}).click();
   await page.getByRole('link',{name:'角色卡',exact:true}).click();
   await page.getByRole('button',{name:'新建',exact:true}).click();
   await expect(page.getByLabel('角色名称')).toBeVisible();
   await page.screenshot({path:'test-results/character-editor.png',fullPage:true});
-  await page.getByRole('link',{name:'模型与连接',exact:true}).click();
+  await page.getByRole('button',{name:'账户'}).click();
+  await page.getByRole('link',{name:'设置',exact:true}).click();
   await expect(page.getByLabel('API 密钥')).toHaveAttribute('type','password');
   await page.screenshot({path:'test-results/settings.png',fullPage:true});
   await page.setViewportSize({width:390,height:844});await page.goto('/');

@@ -15,6 +15,11 @@ const routes = [
   { path: "/settings", name: "settings", component: SettingsView },
   { path: "/persona", name: "persona", component: PersonaView },
   { path: "/knowledge", name: "knowledge", component: KnowledgeView },
+  { path: "/calculator", component: HomeView },
+  { path: "/terminal", component: HomeView },
+  { path: "/profile", component: HomeView },
+  { path: "/about", component: HomeView },
+  { path: "/theme", component: HomeView },
 ];
 
 export default createRouter({

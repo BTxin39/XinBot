@@ -40,18 +40,39 @@ class VectorStore:
             name=COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},
         )
+        self._legacy_checked = False
+
+    def _normalize_legacy_tags(self) -> None:
+        if self._legacy_checked:
+            return
+        self._legacy_checked = True
+        offset = 0
+        while True:
+            batch = self._collection.get(include=["metadatas"], limit=500, offset=offset)
+            ids = batch.get("ids", [])
+            old = [(item_id, meta or {}) for item_id, meta in zip(ids, batch.get("metadatas", [])) if "tag" not in (meta or {})]
+            if old:
+                self._collection.update(ids=[item_id for item_id, _ in old], metadatas=[{**meta, "tag": "default"} for _, meta in old])
+            if len(ids) < 500:
+                break
+            offset += len(ids)
 
     def add(self, chunks: list[str], metadatas: list[dict], ids: list[str]) -> None:
         if not chunks:
             return
         self._collection.add(documents=chunks, metadatas=metadatas, ids=ids)
 
-    def search(self, query: str, k: int = 5) -> list[dict]:
+    def search(self, query: str, k: int = 5, tags: list[str] | None = None) -> list[dict]:
         count = self._collection.count()
         if count == 0:
             return []
 
-        results = self._collection.query(query_texts=[query], n_results=min(k, count))
+        if tags is not None and not tags:
+            return []
+        if tags and "default" in tags and hasattr(self, "_legacy_checked"):
+            self._normalize_legacy_tags()
+        where = {"tag": {"$in": tags}} if tags else None
+        results = self._collection.query(query_texts=[query], n_results=min(k, count), where=where)
 
         items: list[dict] = []
         if results["documents"] and results["documents"][0]:
@@ -63,6 +84,7 @@ class VectorStore:
                     "source": meta.get("source", "unknown"),
                     "chunk_index": meta.get("chunk_index", 0),
                     "distance": dist,
+                    "tag": meta.get("tag", "default"),
                 })
         return items
 
@@ -72,6 +94,13 @@ class VectorStore:
         if ids_to_delete:
             self._collection.delete(ids=ids_to_delete)
         return len(ids_to_delete)
+
+    def set_source_tag(self, source: str, tag: str) -> int:
+        items = self._collection.get(where={"source": source}, include=["metadatas"])
+        ids = items.get("ids", [])
+        if ids:
+            self._collection.update(ids=ids, metadatas=[{**(meta or {}), "tag": tag} for meta in items["metadatas"]])
+        return len(ids)
 
     def clear(self) -> None:
         self._client.delete_collection(COLLECTION_NAME)

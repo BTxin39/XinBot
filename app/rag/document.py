@@ -156,7 +156,7 @@ class KnowledgeBase:
 
     # ── Ingest ──────────────────────────────────────────────
 
-    def ingest_file(self, file_path: str | Path) -> dict:
+    def ingest_file(self, file_path: str | Path, tag: str = "default") -> dict:
         """导入单个文件到知识库。返回导入统计。"""
         file_path = Path(file_path)
         if not file_path.exists():
@@ -176,7 +176,7 @@ class KnowledgeBase:
 
         # 嵌入 + 存储
         metadatas = [
-            {"source": source_key, "chunk_index": i, "filename": file_path.name}
+            {"source": source_key, "chunk_index": i, "filename": file_path.name, "tag": tag}
             for i in range(len(chunks))
         ]
         ids = [
@@ -211,7 +211,7 @@ class KnowledgeBase:
                     })
         return results
 
-    def ingest_url(self, url: str) -> dict:
+    def ingest_url(self, url: str, tag: str = "default") -> dict:
         """导入网页内容。"""
         try:
             import requests
@@ -235,7 +235,7 @@ class KnowledgeBase:
             self.store.remove(source_key)
 
             metadatas = [
-                {"source": source_key, "chunk_index": i, "filename": url}
+                {"source": source_key, "chunk_index": i, "filename": url, "tag": tag}
                 for i in range(len(chunks))
             ]
             ids = [
@@ -253,11 +253,11 @@ class KnowledgeBase:
 
     # ── Query ────────────────────────────────────────────────
 
-    def search(self, query: str, k: int = 5) -> list[dict]:
+    def search(self, query: str, k: int = 5, tags: list[str] | None = None) -> list[dict]:
         """语义搜索知识库。"""
         if self.store.count == 0:
             return []
-        return self.store.search(query, k=k)
+        return self.store.search(query, k=k, tags=tags)
 
     # ── Management ───────────────────────────────────────────
 
@@ -265,20 +265,23 @@ class KnowledgeBase:
         """按来源路径删除。"""
         return self.store.remove(source)
 
+    def set_source_tag(self, source: str, tag: str) -> int:
+        return self.store.set_source_tag(source, tag)
+
     def list_sources(self) -> list[dict]:
         """列出所有知识来源及 chunk 数。"""
         # ChromaDB 的 get 可以拿到所有 metadata
         if self.store.count == 0:
             return []
         results = self.store._collection.get()
-        source_counts: dict[str, int] = {}
+        source_counts: dict[str, dict] = {}
         for meta in results.get("metadatas", []):
             src = meta.get("source", "unknown")
-            source_counts[src] = source_counts.get(src, 0) + 1
+            entry = source_counts.setdefault(src, {"source": src, "chunks": 0, "tag": meta.get("tag", "default")})
+            entry["chunks"] += 1
 
         return [
-            {"source": src, "chunks": count}
-            for src, count in sorted(source_counts.items())
+            entry for _, entry in sorted(source_counts.items())
         ]
 
     def clear(self) -> None:

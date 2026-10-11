@@ -28,12 +28,13 @@ class SearchKnowledgeTool(BaseTool):
     ]
     danger_level = DangerLevel.SAFE
 
-    def __init__(self, kb: KnowledgeBase | None = None):
+    def __init__(self, kb: KnowledgeBase | None = None, persona=None):
         self.kb = kb or KnowledgeBase()
+        self.persona = persona
 
     def execute(self, query: str, top_k: int = 3) -> str:
         top_k = min(max(top_k, 1), 10)
-        results = self.kb.search(query, k=top_k)
+        results = self.kb.search(query, k=top_k, tags=self.persona.knowledge_tags if self.persona else None)
 
         if not results:
             return "知识库为空或未找到相关结果。"

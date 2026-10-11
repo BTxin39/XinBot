@@ -51,7 +51,7 @@ class Agent:
         self.tool_registry.register(WriteFileTool())
         # RAG 知识库工具
         from app.rag.document import KnowledgeBase
-        self.tool_registry.register(SearchKnowledgeTool(KnowledgeBase(self.config)))
+        self.tool_registry.register(SearchKnowledgeTool(KnowledgeBase(self.config), self.persona))
         # Web 搜索工具（仅当配置启用且有内容时注册）
         if self.config.web_search_enabled:
             self.tool_registry.register(WebSearchTool())
@@ -118,13 +118,22 @@ class Agent:
                 messages.append({"role": "system", "content": self.persona.render_macros(instructions)})
         return messages
 
-    def stream_chat(self, user_input: str):
+    def stream_chat(self, user_input: str, thinking: bool = False, thinking_strength: int = 2, image: str | None = None):
         self._observe(user_input)
 
         iterations = 0
         while iterations < MAX_TOOL_ITERATIONS:
             iterations += 1
             messages = self._build_messages()
+            if thinking:
+                guidance = {1: "回答前简要核对关键事实。", 2: "回答前仔细分析问题，核对假设与关键事实。", 3: "回答前全面分析可能性与限制，核对关键事实。"}[thinking_strength]
+                messages.append({"role": "system", "content": guidance + "不要泄露内部推理过程。"})
+            if image:
+                for index in range(len(messages) - 1, -1, -1):
+                    message = messages[index]
+                    if message["role"] == "user":
+                        messages[index] = {**message, "content": [{"type": "text", "text": user_input}, {"type": "image_url", "image_url": {"url": image}}]}
+                        break
             response = self.llm.chat(
                 messages=messages,
                 tools=self.tool_registry.get_tools_schema(),

@@ -25,6 +25,9 @@ class Persona:
     character_card: dict = field(default_factory=dict)
     pet_model: str = ""
     avatar: str = ""
+    aliases: list[str] = field(default_factory=list)
+    history: str = ""
+    knowledge_tags: list[str] = field(default_factory=list)
 
     def to_prompt_text(self) -> str:
         lines = [f"你是 {self.display_name}。", self.background, ""]
@@ -34,6 +37,10 @@ class Persona:
 
         if self.speaking_style:
             lines.append(f"说话风格：{self.speaking_style}")
+        if self.aliases:
+            lines.append(f"别名：{'、'.join(self.aliases)}")
+        if self.history:
+            lines.append(f"简要经历：{self.history}")
 
         if self.constraints:
             lines.append("行为约束：")
@@ -63,6 +70,9 @@ class Persona:
             "character_card": self.character_card,
             "pet_model": self.pet_model,
             "avatar": self.avatar,
+            "aliases": self.aliases,
+            "history": self.history,
+            "knowledge_tags": self.knowledge_tags,
         }
 
 
@@ -125,6 +135,9 @@ class PersonaStore:
                 character_card=p.get("character_card", {}),
                 pet_model=p.get("pet_model", ""),
                 avatar=p.get("avatar", ""),
+                aliases=p.get("aliases", []),
+                history=p.get("history", ""),
+                knowledge_tags=p.get("knowledge_tags", []),
             )
 
         self.emotions = {}

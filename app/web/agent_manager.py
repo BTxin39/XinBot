@@ -55,10 +55,10 @@ class AgentManager:
         }
 
     @classmethod
-    def chat(cls, user_input: str) -> str:
+    def chat(cls, user_input: str, **options) -> str:
         agent = cls.get()
         parts: list[str] = []
-        for chunk in agent.stream_chat(user_input):
+        for chunk in agent.stream_chat(user_input, **options):
             parts.append(chunk)
         reply = "".join(parts)
         cls._latest_message = reply

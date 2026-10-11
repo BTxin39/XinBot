@@ -10,6 +10,7 @@ const paused = ref(false);
 const zoom = ref(1);
 let application, model, observer, animation, generation = 0, spriteImage, lastFrame = 0, frame = 0, row = 0, interactionUntil = 0;
 let baseWidth = 1, baseHeight = 1;
+let middleDrag = null;
 let corePromise;
 function loadCore() {
   if (window.Live2DCubismCore) return Promise.resolve();
@@ -79,6 +80,8 @@ function animateSprite(now) {
 }
 function interact() { if (model) { model.expression(); model.motion('TapBody'); } row = 3; interactionUntil = performance.now() + 2400; }
 function changeZoom(amount) { zoom.value = Math.max(.6, Math.min(1.6, zoom.value + amount)); resize(); }
+function beginMiddle(event) { if (event.button !== 1) return; event.preventDefault(); middleDrag = {y:event.clientY, zoom:zoom.value}; event.currentTarget.setPointerCapture(event.pointerId); }
+function moveMiddle(event) { if (!middleDrag) return; zoom.value = Math.max(.6, Math.min(1.6, middleDrag.zoom + (middleDrag.y - event.clientY) / 250)); resize(); }
 function toggle() { paused.value = !paused.value; if (application) paused.value ? application.stop() : application.start(); }
 watch(() => pet.value?.id, load, { flush: 'post' });
 onMounted(() => { observer = new ResizeObserver(resize); observer.observe(host.value); load(); });
@@ -87,7 +90,7 @@ onUnmounted(() => { generation++; cleanup(); observer?.disconnect(); });
 
 <template>
   <div class="pet-workspace">
-    <div class="pet-stage" ref="host" @click="interact">
+    <div class="pet-stage" ref="host" @click="interact" @pointerdown="beginMiddle" @pointermove="moveMiddle" @pointerup="middleDrag=null" @pointercancel="middleDrag=null" @auxclick.prevent>
       <canvas :key="pet?.id" ref="canvas" :aria-label="pet?.name || '桌宠'" />
       <div v-if="loading || error || !pet" class="stage-status" role="status">{{ error || (loading ? '正在唤醒…' : '还没有桌宠模型') }}<button v-if="error" @click.stop="load">重新加载</button></div>
     </div>
