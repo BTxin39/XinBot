@@ -4,7 +4,7 @@
 
 ```powershell
 uv sync
-cd app/web
+cd app/interfaces/web
 npm ci
 npm run build
 cd ../..
@@ -12,7 +12,7 @@ uv run xinbot start web
 ```
 
 Open http://127.0.0.1:3796. The server binds to loopback only. For development,
-run `xinbot start web --dev` and `npm run dev` in `app/web`; Vite proxies to 3796.
+run `xinbot start web --dev` and `npm run dev` in `app/interfaces/web`; Vite proxies to 3796.
 
 ## Characters
 
@@ -65,7 +65,7 @@ tray integration and desktop click-through remain separate desktop-shell work.
 
 ```powershell
 uv run pytest tests/test_web_cards.py -q
-cd app/web
+cd app/interfaces/web
 npm run build
 npx playwright test --workers=1
 ```

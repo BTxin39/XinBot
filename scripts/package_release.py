@@ -6,29 +6,41 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.1.0"
+VERSION = "0.2.0"
+
+# 不纳入发布包的内容：依赖、字节码、测试产物、前端源码目录（只发构建产物）
+EXCLUDED_PARTS = {
+    "node_modules",
+    "__pycache__",
+    "test-results",
+    "static",
+    "src",
+    "public",
+    "tests",
+}
 
 
 def release_files(root: Path):
     for directory in ("app", "docs", "tests"):
         for path in sorted((root / directory).rglob("*")):
             relative = path.relative_to(root)
-            if any(part in {"node_modules", "__pycache__", "test-results", "static"} for part in relative.parts):
+            if any(part in EXCLUDED_PARTS for part in relative.parts):
                 continue
-            if path.is_file() and not path.is_symlink() and path.suffix in {".py", ".vue", ".js", ".css", ".md", ".html"}:
+            if path.is_file() and not path.is_symlink() and path.suffix in {".py", ".md"}:
                 yield relative
     for name in ("pyproject.toml", "uv.lock", "README.md", "app/core/defaults.json",
-                 "app/web/package.json", "app/web/package-lock.json", "scripts/download_live2d.py",
+                 "app/interfaces/web/package.json", "app/interfaces/web/package-lock.json",
+                 "scripts/download_live2d.py",
                  "scripts/package_release.py", "start.ps1", ".gitignore"):
         yield Path(name)
-    for path in sorted((root / "app/web/static/dist").rglob("*")):
+    for path in sorted((root / "app/interfaces/web/static/dist").rglob("*")):
         if path.is_file() and not path.is_symlink() and path.suffix in {".html", ".js", ".css"}:
             yield path.relative_to(root)
 
 
 def main():
-    if not (ROOT / "app/web/static/dist/index.html").is_file():
-        raise SystemExit("Run npm run build in app/web first")
+    if not (ROOT / "app/interfaces/web/static/dist/index.html").is_file():
+        raise SystemExit("Run npm run build in app/interfaces/web first")
     files = sorted(set(release_files(ROOT)))
     output = ROOT / "dist"
     output.mkdir(exist_ok=True)

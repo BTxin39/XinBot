@@ -18,7 +18,10 @@
       "builtin": true,
       "character_card": {},
       "pet_model": "",
-      "avatar": ""
+      "avatar": "",
+      "aliases": [],
+      "history": "",
+      "knowledge_tags": []
     },
     "shiro": {
       "name": "shiro",
@@ -38,7 +41,10 @@
       "builtin": true,
       "character_card": {},
       "pet_model": "codex:kaguya/pet.json",
-      "avatar": ""
+      "avatar": "",
+      "aliases": [],
+      "history": "",
+      "knowledge_tags": []
     },
     "mentor": {
       "name": "mentor",
@@ -58,7 +64,10 @@
       "builtin": true,
       "character_card": {},
       "pet_model": "live2d:haru/Haru.model3.json",
-      "avatar": ""
+      "avatar": "",
+      "aliases": [],
+      "history": "",
+      "knowledge_tags": []
     }
   },
   "emotions": {

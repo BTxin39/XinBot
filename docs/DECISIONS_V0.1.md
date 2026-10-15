@@ -125,7 +125,7 @@ class AgentManager:
 
 ### 2.4 现有 backend 骨架处理
 
-**决策：删除 `app/backend/`，Web 代码统一放在 `app/web/`。**
+**决策：删除 `app/backend/`，Web 代码统一放在 `app/interfaces/web/`。**
 
 理由：早期骨架与当前 Agent 核心不联通、不需要用户系统、避免维护两套 ORM。
 
@@ -149,7 +149,7 @@ class AgentManager:
 ### 3.2 项目结构
 
 ```
-app/web/
+app/interfaces/web/
 ├── static/                  # FastAPI serve 的根目录
 │   ├── dist/                # Vite build 产物 (生产)
 │   └── models/              # Live2D 模型 (用户放入)

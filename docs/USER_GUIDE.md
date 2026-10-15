@@ -188,7 +188,7 @@ delete tutorial
 3. 点击“转换”，下方显示结果。
 4. 使用复制或下载图标获取文本。查看时选等宽字体，避免字符错位；Braille 还需要字体支持盲文字符。
 
-图片上限 10 MB、1600 万像素。转换使用临时文件，不会把原图保存到角色库。它对应 `app/cli/image_to_ascii.py`，不能将图片转换成可动 Live2D。
+图片上限 10 MB、1600 万像素。转换使用临时文件，不会把原图保存到角色库。它对应 `app/services/image_ascii.py`，不能将图片转换成可动 Live2D。
 
 ## 9. 知识库与配置
 
@@ -223,6 +223,6 @@ delete tutorial
 | 无法删除模型、角色或记忆 | 先切换到其他项；内置角色始终不能删除 |
 | 控制台提示未知命令 | 输入 `help`；此处只能管理记忆，不能执行系统命令 |
 
-迁移或升级前先停止服务，再私下备份根目录 `.env`、整个 `data/` 和 `pet/`。所有桌宠资产统一存放在 `pet/`：`live2d/` 存放 Live2D 模型，`codexpet/` 存放 Codex 精灵包，`imported/` 存放网页导入包，`vendor/` 存放 Cubism Core。旧版本的 `app/web/static/models/`、`app/web/static/vendor/`、`data/web_uploads/pets/` 应分别迁移到这些对应目录，保留内部相对路径；遇到同名文件先比较备份，不要直接覆盖。其中可能包含密钥和个人对话，禁止提交到公开仓库或放入公开发布包。
+迁移或升级前先停止服务，再私下备份根目录 `.env`、整个 `data/` 和 `pet/`。所有桌宠资产统一存放在 `pet/`：`live2d/` 存放 Live2D 模型，`codexpet/` 存放 Codex 精灵包，`imported/` 存放网页导入包，`vendor/` 存放 Cubism Core。旧版本的 `app/interfaces/web/static/models/`、`app/interfaces/web/static/vendor/`、`data/web_uploads/pets/` 应分别迁移到这些对应目录，保留内部相对路径；遇到同名文件先比较备份，不要直接覆盖。其中可能包含密钥和个人对话，禁止提交到公开仓库或放入公开发布包。
 
 新版本先解压到另一个目录并阅读变更说明，不要直接覆盖唯一备份。v0.1 发布包只含程序和公开默认角色，不含你的个人数据。

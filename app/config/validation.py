@@ -1,11 +1,29 @@
-"""Configuration validation module for checking required settings before startup."""
+"""Configuration validation module for checking required settings before startup.
+
+本模块属于 `config/` 层，**不得依赖渲染库**（见 docs/DECISIONS_V0.2.md §8 R4）。
+原先它在模块导入期 `from rich.console import Console`，导致任何经过
+`Agent → validate_config` 的调用链都被迫加载 rich——Web 端复用命令层时即被这一点挡住。
+现在校验只返回/抛出错误列表，打印交给各适配器。
+"""
 
 import os
-import sys
-from typing import List, Dict
-from rich.console import Console
+from typing import Dict, List
+
 from app.llm.registry import LLMRegistry
 from app.config.runtime import RuntimeConfig
+
+
+class ConfigValidationError(ValueError):
+    """配置校验失败。
+
+    继承 `ValueError` 以兼容既有调用方（它们原本 catch ValueError）。
+    `errors` 保留全部具体原因，供适配器展示——历史实现把明细 print 到终端后
+    只抛一句 "Configuration validation failed"，调用方 catch 后无法得知原因。
+    """
+
+    def __init__(self, errors: List[str]):
+        self.errors = list(errors)
+        super().__init__("Configuration validation failed: " + "; ".join(self.errors))
 
 
 class ConfigValidator:
@@ -96,20 +114,12 @@ class ConfigValidator:
 def validate_config(config: RuntimeConfig) -> None:
     """
     Validates the given configuration and raises an exception if any issues are found.
-    
+
     Args:
         config: RuntimeConfig instance to validate
-        
     Raises:
-        ValueError: If any configuration issues are found
+        ConfigValidationError: 携带全部具体原因（`.errors`）
     """
-    validator = ConfigValidator()
-    errors = validator.validate_startup_config(config)
-    
+    errors = ConfigValidator.validate_startup_config(config)
     if errors:
-        console = Console()
-        console.print("[bold red]Configuration validation failed:[/bold red]")
-        for error in errors:
-            console.print(f"  - {error}")
-        console.print("\n[bold yellow]Please check your environment variables and configuration.[/bold yellow]")
-        raise ValueError("Configuration validation failed")
+        raise ConfigValidationError(errors)

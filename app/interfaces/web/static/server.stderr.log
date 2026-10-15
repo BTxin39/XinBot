@@ -1,0 +1,10 @@
+INFO:     Started server process [26596]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3796 (Press CTRL+C to quit)
+
+[MCP] 已注册远端工具: echo (来自 python scripts/mcp_server_sdk_style.py)
+
+[MCP] 已注册远端工具: add_numbers (来自 python scripts/mcp_server_sdk_style.py)
+
+[MCP] 已注册远端工具: get_current_time (来自 python scripts/mcp_server_sdk_style.py)

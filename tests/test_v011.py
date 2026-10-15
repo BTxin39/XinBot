@@ -5,7 +5,7 @@ import pytest
 from app.core.persona import Persona
 from app.core.tools.builtin.rag import SearchKnowledgeTool
 from app.rag.vector_store import VectorStore
-from app.web.story import preview_story
+from app.interfaces.web.story import preview_story
 from fastapi.testclient import TestClient
 
 
@@ -39,7 +39,7 @@ def test_story_preview_is_review_only(monkeypatch):
         def chat(self, messages):
             assert "故事：" in messages[-1]["content"]
             return SimpleNamespace(content='{"characters":[{"name":"Alice","aliases":["A"],"personality":"kind","history":"travels","evidence":"chapter one"}]}')
-    monkeypatch.setattr("app.web.story.LLMClient", FakeClient)
+    monkeypatch.setattr("app.interfaces.web.story.LLMClient", FakeClient)
     candidates = preview_story("Alice travels", "Alice")
     assert candidates[0]["display_name"] == "Alice"
     assert candidates[0]["evidence"] == "chapter one"
@@ -49,10 +49,11 @@ def test_story_preview_is_review_only(monkeypatch):
 
 def test_v011_api_contract(tmp_path, monkeypatch):
     import app.core.persona as persona_module
-    import app.web.routes.rag as rag_module
-    import app.web.routes.persona as persona_route
+    import app.services.rag_service as rag_service_module
+    import app.interfaces.web.routes.rag as rag_module
+    import app.interfaces.web.routes.persona as persona_route
     from app.core.persona import PersonaStore
-    from app.web.server import app
+    from app.interfaces.web.server import app
 
     monkeypatch.setattr(persona_module, "PERSONAS_PATH", tmp_path / "personas.json")
     monkeypatch.setattr(PersonaStore, "_instance", None)
@@ -62,9 +63,15 @@ def test_v011_api_contract(tmp_path, monkeypatch):
             return [{"source": "book.txt", "tag": "story", "chunks": 2}]
         def set_source_tag(self, source, tag):
             return 2 if source == "book.txt" and tag == "new" else 0
-        def search(self, query, tags=None):
+        def search(self, query, k=5, tags=None):
             return [{"tag": tags[0]}] if tags else []
-    monkeypatch.setattr(rag_module, "knowledge", FakeKnowledge)
+    # P4 后路由经 RagService；替换路由的 service 构造器以注入假知识库
+    # （service 内的标签校验等真实逻辑仍然执行）
+    monkeypatch.setattr(
+        rag_module,
+        "knowledge",
+        lambda: rag_service_module.RagService(knowledge=FakeKnowledge()),
+    )
     with TestClient(app, base_url="http://127.0.0.1") as client:
         created = client.post("/api/persona", json={"display_name": "Alice", "aliases": ["A"], "history": "Trip", "knowledge_tags": ["story"]})
         assert created.status_code == 200

@@ -16,31 +16,42 @@ from app.core.state import AgentState
 from app.memory.profile import MemoryProfile
 from app.llm.registry import LLMRegistry
 from app.rag.document import DocumentChunker
-from app.web.agent_manager import AgentManager
-from app.web.character_cards import read_card, validate_card, export_card
-from app.web.routes import models
-from app.web.server import app
+from app.services.agent_runtime import AgentRuntime
+from app.interfaces.web.character_cards import read_card, validate_card, export_card
+from app.interfaces.web.routes import models
+from app.interfaces.web.server import app
 
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     import app.core.persona as persona_module
     import app.config.runtime as runtime_module
+    import app.llm.registry as registry_module
+
     monkeypatch.setattr(persona_module, "PERSONAS_PATH", tmp_path / "personas.json")
     monkeypatch.setattr(runtime_module, "CONFIG_PATH", tmp_path / "config.json")
+    # 隔离 LLM 注册表：path 是 default 参数，构造时求值，因此要同时改默认值，
+    # 否则 service 层（LLMConfigService）会用真实 data/llm_registry.json
+    monkeypatch.setattr(registry_module, "REGISTRY_PATH", tmp_path / "registry.json")
+    monkeypatch.setattr(
+        registry_module.LLMRegistry,
+        "__init__",
+        lambda self, path=tmp_path / "registry.json": _registry_init(self, path),
+    )
     monkeypatch.setattr(PersonaStore, "_instance", None)
-    monkeypatch.setattr(AgentManager, "_instance", None)
+    AgentRuntime.reset_for_tests()
     monkeypatch.setattr(models, "ROOT", tmp_path)
     monkeypatch.setattr(models, "UPLOAD_ROOT", tmp_path / "pets")
-    monkeypatch.setattr(models, "LLMRegistry", lambda: LLMRegistry(tmp_path / "registry.json"))
-    import app.web.routes.memory as memory_module
-    import app.web.routes.config as config_module
-    monkeypatch.setattr(memory_module, "PROFILE_ROOT", tmp_path / "profiles")
-    monkeypatch.setattr(config_module, "LLMRegistry", lambda: LLMRegistry(tmp_path / "registry.json"))
     PersonaStore.get()
     RuntimeConfig(db_path=str(tmp_path / "memory.db")).save()
     with TestClient(app, base_url="http://127.0.0.1", raise_server_exceptions=False) as instance:
         yield instance
+
+
+def _registry_init(self, path):
+    """复刻 LLMRegistry.__init__，但强制使用隔离路径。"""
+    self.path = path
+    self.data = self._load()
 
 
 def card():
@@ -51,7 +62,7 @@ def card():
 
 
 def test_pet_storage_paths():
-    from app.web.server import ROOT
+    from app.interfaces.web.server import ROOT
     from scripts.download_live2d import ROOT as download_root
     assert models.MODEL_ROOT == ROOT / "pet/live2d"
     assert models.UPLOAD_ROOT == ROOT / "pet/imported"
@@ -87,17 +98,21 @@ def test_post_history_instructions():
 
 
 def test_greeting_is_added_once(monkeypatch):
-    import app.web.agent_manager as manager_module
+    import app.services.agent_runtime as runtime_module
     messages = []
     fake = SimpleNamespace(
         persona=Persona(name="haru", display_name="Haru", character_card=validate_card(card())),
         tool_manager=SimpleNamespace(),
+        shutdown=lambda: None,
         memory=SimpleNamespace(get_message=lambda: messages, add_message=lambda **message: messages.append(message)))
-    monkeypatch.setattr(AgentManager, "_instance", None)
-    monkeypatch.setattr(manager_module, "Agent", lambda config: fake)
-    AgentManager.get()
-    AgentManager.get()
-    assert messages == [{"role": "assistant", "content": "Hello"}]
+    AgentRuntime.reset_for_tests()
+    try:
+        monkeypatch.setattr(runtime_module, "Agent", lambda config, approval_callback=None: fake)
+        AgentRuntime.get()
+        AgentRuntime.get()
+        assert messages == [{"role": "assistant", "content": "Hello"}]
+    finally:
+        AgentRuntime.reset_for_tests()
 
 
 def test_png_metadata():
@@ -132,7 +147,7 @@ def test_invalid_inputs_and_origin(client):
 
 
 def test_keys_not_exposed(client, monkeypatch):
-    from app.web.credentials import credential_name
+    from app.interfaces.web.credentials import credential_name
     monkeypatch.delenv(credential_name("test"), raising=False)
     connection = {"name": "test", "base_url": "https://example.com/v1", "model": "test-model", "api_key": "secret-value"}
     response = client.post("/api/models", json=connection)
@@ -165,7 +180,7 @@ def test_sprite_zip(client):
 
 
 def test_chat_transport(client, monkeypatch):
-    monkeypatch.setattr(AgentManager, "chat", lambda message: "Reply: " + message)
+    monkeypatch.setattr(AgentRuntime, "chat", lambda user_input, **options: "Reply: " + user_input)
     assert client.post("/api/chat", json={"message": "hello"}).json()["data"]["reply"] == "Reply: hello"
     with client.websocket_connect("ws://127.0.0.1/ws/chat") as socket:
         socket.send_json({"message": "hello"})

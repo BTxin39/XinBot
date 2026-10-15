@@ -111,7 +111,7 @@ delete study
 ## 图片转字符画
 
 “字符画”页面上传图片，选择 Braille / ASCII 和宽度，可预览、复制、下载文本。
-复用 `app/cli/image_to_ascii.py`；上传只使用临时文件，转换后清理。限制 10 MB、1600 万像素。
+复用 `app/services/image_ascii.py`；上传只使用临时文件，转换后清理。限制 10 MB、1600 万像素。
 
 ## 配置与端口
 
@@ -127,7 +127,7 @@ MCP 启动命令、数据库路径和任意环境变量不开放网页修改，�
 
 ```powershell
 uv sync --frozen
-cd app/web
+cd app/interfaces/web
 npm ci
 npm run build
 cd ../..
@@ -137,13 +137,13 @@ uv run pytest tests/test_web_cards.py tests/test_web_management.py -q
 
 开发时运行 `xinbot start web --dev` 和 `npm run dev`。Vite 启动时读取保存的端口，
 也可用 `XINBOT_WEB_PORT` 覆盖；修改端口后需重启 Vite。前端始终使用同源 API/WebSocket。
-浏览器测试：在后端启动后进入 `app/web` 运行 `npx playwright test --workers=1`，默认使用 Microsoft Edge。
+浏览器测试：在后端启动后进入 `app/interfaces/web` 运行 `npx playwright test --workers=1`，默认使用 Microsoft Edge。
 测试不调用付费模型、不修改真实记忆。更多兼容说明见 `docs/WEB_COMPANION.md`。
 
 ## 构建 v0.1 发布包
 
 ```powershell
-cd app/web
+cd app/interfaces/web
 npm ci
 npm run build
 cd ../..

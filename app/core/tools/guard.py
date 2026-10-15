@@ -18,58 +18,23 @@
   如果写死在 ToolManager 里，换前端就要改核心代码。
 """
 
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
-from app.core.tools.base import BaseTool, DangerLevel
+from app.core.tools.base import DangerLevel
+
+if TYPE_CHECKING:  # 仅用于类型标注
+    from app.core.tools.base import BaseTool
 
 # ── 类型定义 ──────────────────────────────────────────────────────
 
-ApprovalCallback = Callable[[BaseTool, dict], bool]
+ApprovalCallback = Callable[["BaseTool", dict], bool]
 """审批回调签名：
     tool   — 被调用的工具实例，可读 name/description/danger_level
     kwargs — LLM 传入的参数字典，用于展示给用户做判断
     返回 True=批准，False=拒绝
+
+具体实现由调用方注入（CLI 见 `app.interfaces.cli.approval`）。见 docs/DECISIONS_V0.2.md §9。
 """
-
-
-# ── CLI 审批回调 ──────────────────────────────────────────────────
-
-def _truncate(text: str, max_len: int = 200) -> str:
-    """截断长字符串，避免终端显示被大段 content 刷屏。"""
-    if len(text) <= max_len:
-        return text
-    return text[:max_len] + f"…（共 {len(text)} 字符）"
-
-
-def cli_approval_callback(tool: BaseTool, kwargs: dict) -> bool:
-    """CLI 环境下的审批交互。
-
-    在终端显示危险操作警告和参数，等用户输入 y/N 决定。
-
-    设计注意：这里不用 rich.Panel，因为回调可能在 Live/streaming
-    上下文中被调用，rich 的复杂渲染会与 Live 刷新冲突导致显示截断。
-    用纯 print() 在任何上下文中都可靠。
-    """
-    # 格式化参数显示（content 等长字符串要截断）
-    param_lines = []
-    for key, value in kwargs.items():
-        displayed = _truncate(str(value))
-        param_lines.append(f"  {key} = {displayed}")
-
-    separator = "─" * 50
-
-    print()  # 空行，与上方输出拉开距离
-    print(separator)
-    print(f"  ⚠️  危险操作: {tool.name}")
-    print(f"  {tool.description}")
-    print(f"  参数:")
-    for line in param_lines:
-        print(line)
-    print(separator)
-    print("  允许执行？[y/N]", end=" ", flush=True)
-
-    answer = input("").strip().lower()
-    return answer in ("y", "yes")
 
 
 # ── ToolGuard ─────────────────────────────────────────────────────
@@ -112,7 +77,7 @@ class ToolGuard:
         # None = "全部放行"的哨兵值；传入 set 后，只有 set 内的放行
         self._readonly_whitelist = readonly_whitelist
 
-    def check(self, tool: BaseTool, kwargs: dict) -> bool:
+    def check(self, tool: "BaseTool", kwargs: dict) -> bool:
         """检查工具是否可以执行。
 
         判断链：
@@ -144,7 +109,7 @@ class ToolGuard:
         # 未知等级 → 拒绝（防御性编程）
         return False
 
-    def _ask_user(self, tool: BaseTool, kwargs: dict) -> bool:
+    def _ask_user(self, tool: "BaseTool", kwargs: dict) -> bool:
         """统一的审批询问入口。"""
         if self._callback is None:
             return False  # fail-safe

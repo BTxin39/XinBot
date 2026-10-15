@@ -29,16 +29,32 @@ class MemoryManager:
         """添加消息并在窗口溢出时自动生成运行摘要。
 
         流程：
-        1. 消息写入 ChatMemory
-        2. ChatMemory 裁剪旧消息 → 返回被丢弃的消息列表
-        3. 如果有被丢弃的消息 → 调用 ContextSummarizer 压缩
-        4. 摘要累积到 _running_summary，注入回系统 prompt
+        1. **先检查外部改动**（另一进程可能切换了记忆或改写了消息，见 D4）
+        2. 消息写入 ChatMemory
+        3. ChatMemory 裁剪旧消息 → 返回被丢弃的消息列表
+        4. 如果有被丢弃的消息 → 调用 ContextSummarizer 压缩
+        5. 摘要累积到 _running_summary，注入回系统 prompt
         """
+        sync = getattr(self._chat, "sync_if_stale", None)
+        if sync is not None and sync():
+            # 记忆已被外部替换或清空，运行摘要对应的上下文已失效
+            self._running_summary = ""
+
         discarded = self._chat.add_message(role=role, content=content, **kwargs)
         if discarded:
             self._running_summary = self._summarizer.summarize(
                 discarded, self._running_summary
             )
+
+    def sync_if_stale(self) -> bool:
+        """把外部的记忆变更同步进当前会话（供 Agent 在每轮开始前调用）。"""
+        sync = getattr(self._chat, "sync_if_stale", None)
+        if sync is None:
+            return False
+        reloaded = sync()
+        if reloaded:
+            self._running_summary = ""
+        return reloaded
 
     def get_message(self) -> list[dict]:
         return self._chat.get_message()

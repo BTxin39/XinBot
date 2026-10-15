@@ -1,0 +1,270 @@
+[XinBot Web] 生产模式 — serve D:\Users\BTxin\XinBot\app\web\static\dist
+[XinBot Web] 启动 http://127.0.0.1:3796
+INFO:     127.0.0.1:6156 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6156 - "GET /assets/index-DuCAPXJH.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11333 - "GET /assets/index-Cx4kOozz.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6156 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11333 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2312 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7311 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7311 - "GET /vendor/live2dcubismcore.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7311 - "GET /assets/pixi-Dz8_NPy_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2312 - "GET /assets/core-chx--t7L.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9878 - "GET /assets/cubism4.es-COwwA5se.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9878 - "GET /models/haru/Haru.model3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10756 - "GET /models/haru/Haru.2048/texture_00.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9878 - "GET /models/haru/Haru.moc3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12685 - "GET /models/haru/Haru.2048/texture_01.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10756 - "GET /models/haru/motions/haru_g_idle.motion3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12685 - "GET /models/haru/motions/haru_g_m15.motion3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9878 - "GET /models/haru/Haru.physics3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10756 - "GET /models/haru/Haru.pose3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9878 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10756 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1195 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12685 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12685 - "POST /api/ascii HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /assets/index-DuCAPXJH.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /assets/index-Cx4kOozz.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10744 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /vendor/live2dcubismcore.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /assets/pixi-Dz8_NPy_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /assets/core-chx--t7L.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /assets/cubism4.es-COwwA5se.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /models/haru/Haru.model3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /models/haru/Haru.moc3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /models/haru/Haru.2048/texture_00.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /models/haru/Haru.2048/texture_01.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /models/haru/motions/haru_g_idle.motion3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /models/haru/motions/haru_g_m15.motion3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /models/haru/Haru.physics3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /models/haru/Haru.pose3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /models/haru/expressions/F08.exp3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /models/haru/motions/haru_g_m20.motion3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /models/haru/sounds/haru_normal_6.wav HTTP/1.1" 206 Partial Content
+INFO:     127.0.0.1:10743 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /assets/index-Cx4kOozz.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /assets/index-DuCAPXJH.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10744 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /vendor/live2dcubismcore.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /assets/core-chx--t7L.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /assets/pixi-Dz8_NPy_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /assets/cubism4.es-COwwA5se.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /models/haru/Haru.model3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /models/haru/Haru.moc3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /models/haru/Haru.2048/texture_00.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /models/haru/Haru.2048/texture_01.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10743 - "GET /models/haru/motions/haru_g_m15.motion3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6735 - "GET /models/haru/motions/haru_g_idle.motion3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6897 - "GET /models/haru/Haru.pose3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9262 - "GET /models/haru/Haru.physics3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9520 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9520 - "GET /assets/index-DuCAPXJH.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3101 - "GET /assets/index-Cx4kOozz.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9520 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6157 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6158 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3101 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3101 - "GET /codexpet/kaguya/spritesheet.webp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6156 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6156 - "GET /assets/index-DuCAPXJH.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13251 - "GET /assets/index-Cx4kOozz.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13251 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6156 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4973 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13694 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11431 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13694 - "GET /vendor/live2dcubismcore.min.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:4973 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:13694 - "GET /assets/core-chx--t7L.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4973 - "GET /assets/pixi-Dz8_NPy_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13694 - "GET /assets/cubism4.es-COwwA5se.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13694 - "GET /models/haru/Haru.model3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:13694 - "GET /models/haru/Haru.moc3 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:4973 - "GET /models/haru/Haru.2048/texture_00.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:6156 - "GET /models/haru/Haru.2048/texture_01.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:6156 - "GET /models/haru/motions/haru_g_idle.motion3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:4973 - "GET /models/haru/motions/haru_g_m15.motion3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:4973 - "GET /models/haru/Haru.pose3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:6156 - "GET /models/haru/Haru.physics3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:11431 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11431 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12140 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12140 - "GET /assets/index-DuCAPXJH.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6015 - "GET /assets/index-Cx4kOozz.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6015 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:12140 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4523 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10617 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2154 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:2154 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10617 - "GET /vendor/live2dcubismcore.min.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:2154 - "GET /assets/pixi-Dz8_NPy_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10617 - "GET /assets/core-chx--t7L.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10617 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:10617 - "GET /assets/cubism4.es-COwwA5se.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10617 - "GET /models/haru/Haru.model3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:10617 - "GET /models/haru/Haru.moc3 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:4523 - "GET /models/haru/Haru.2048/texture_01.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:2154 - "GET /models/haru/Haru.2048/texture_00.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:4523 - "GET /models/haru/motions/haru_g_idle.motion3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:2154 - "GET /models/haru/motions/haru_g_m15.motion3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:10617 - "GET /models/haru/Haru.pose3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:2154 - "GET /models/haru/Haru.physics3.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:2154 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1205 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1205 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6956 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5653 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6956 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8127 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:5607 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4181 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4181 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4181 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:11815 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11815 - "GET /assets/index-DuCAPXJH.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:1058 - "GET /assets/index-Cx4kOozz.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:1058 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11815 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3222 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14785 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1661 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1661 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1661 - "GET /assets/pixi-Dz8_NPy_.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:14785 - "GET /assets/core-chx--t7L.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:14785 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:14785 - "GET /assets/cubism4.es-COwwA5se.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:4684 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4684 - "GET /assets/index-DuCAPXJH.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9125 - "GET /assets/index-Cx4kOozz.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9125 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4684 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3232 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8104 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8104 - "GET /vendor/live2dcubismcore.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8104 - "GET /assets/pixi-Dz8_NPy_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /assets/core-chx--t7L.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /assets/cubism4.es-COwwA5se.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /models/haru/Haru.model3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /models/haru/Haru.moc3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3232 - "GET /models/haru/Haru.2048/texture_01.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8104 - "GET /models/haru/Haru.2048/texture_00.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3232 - "GET /models/haru/motions/haru_g_idle.motion3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /models/haru/motions/haru_g_m15.motion3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8104 - "GET /models/haru/Haru.pose3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3232 - "GET /models/haru/Haru.physics3.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3232 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8104 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3232 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4684 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9125 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7481 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4684 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3232 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9125 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9125 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9125 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9125 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9125 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4684 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7305 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3232 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3232 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7481 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6741 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9487 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6741 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9680 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7902 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6019 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6019 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7481 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6019 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6019 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6019 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13885 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1202 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3865 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7779 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7779 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3489 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7779 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7779 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3489 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7779 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3489 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3489 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3489 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3489 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3489 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3489 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3489 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:10612 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7236 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7236 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7236 - "GET /assets/index-DuCAPXJH.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:13444 - "GET /assets/index-Cx4kOozz.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:7236 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13444 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1127 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13444 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7236 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7236 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13444 - "GET /assets/core-chx--t7L.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:7236 - "GET /assets/pixi-Dz8_NPy_.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:7236 - "GET /assets/cubism4.es-COwwA5se.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:7236 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7236 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13444 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11274 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3396 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1127 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1127 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1127 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1127 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3396 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13444 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7236 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11274 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11274 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11274 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11274 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:7236 - "GET /api/persona HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3396 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1127 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13444 - "GET /api/pet/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13444 - "GET /api/chat/history HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1632 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1632 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:8400 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3403 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:3403 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11320 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:11320 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6015 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6015 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6015 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6015 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6015 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13163 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9628 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:14358 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4278 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:6570 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:9564 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:13445 - "GET /api/status HTTP/1.1" 200 OK

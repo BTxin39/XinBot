@@ -7,9 +7,16 @@ import pytest
 
 from tests.test_web_cards import client
 from app.config.runtime import RuntimeConfig
-from app.web.credentials import credential_name
-from app.web.routes import models
+from app.interfaces.web.credentials import credential_name
+from app.interfaces.web.routes import models
+import app.services.memory_service as memory_service
 from app.storage.sqlite_store import SQLiteStore
+
+
+@pytest.fixture(autouse=True)
+def isolate_memory_profiles(tmp_path, monkeypatch):
+    """记忆画像目录隔离到 tmp_path，避免用例写真实 data/memory_json。"""
+    monkeypatch.setattr(memory_service, "PROFILE_DIR", tmp_path / "profiles")
 
 
 def connection(**changes):
@@ -157,7 +164,7 @@ def test_deleted_memory_does_not_remigrate(tmp_path):
 
 
 def test_env_name_guard(tmp_path):
-    from app.web.credentials import write_secret
+    from app.interfaces.web.credentials import write_secret
     with pytest.raises(ValueError):
         write_secret(tmp_path, "PYTHONPATH", "malicious")
     assert not (tmp_path / ".env").exists()

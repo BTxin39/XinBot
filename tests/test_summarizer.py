@@ -123,31 +123,35 @@ class TestContextSummarizer:
 
 class TestChatMemoryTrim:
     @staticmethod
-    def _fresh_memory(max_messages: int) -> ChatMemory:
-        """创建一个干净的 ChatMemory，不从磁盘加载旧数据。
+    def _fresh_memory(max_messages: int, db_path: str) -> ChatMemory:
+        """创建一个干净的 ChatMemory，不碰真实数据库。
 
-        用唯一的 memory_name 避免与 default_memory.json 冲突。
+        隔离说明：`ChatMemory` 经 `RuntimeConfig.db_path` 打开 SQLite，
+        若不显式传入就会落到默认的 `data/xinbot.db`——那正是用户真实数据库。
+        历史实现漏了这一点，导致每次跑测试都会对真实库
+        （记忆名 `test_trim`）执行 clear + 写入。故此处必须传 tmp_path。
         """
         config = RuntimeConfig(
             max_memory_messages=max_messages,
             current_memory_name="test_trim",
+            db_path=db_path,
         )
         memory = ChatMemory(config)
         memory.clear()
         return memory
 
-    def test_add_message_returns_empty_when_not_trimming(self):
+    def test_add_message_returns_empty_when_not_trimming(self, tmp_path):
         """消息数未超窗口 → add_message 返回空列表。"""
-        memory = self._fresh_memory(max_messages=10)
+        memory = self._fresh_memory(max_messages=10, db_path=str(tmp_path / "trim.db"))
 
         discarded = memory.add_message(role="user", content="hello")
 
         assert discarded == []
         assert len(memory.get_message()) == 1
 
-    def test_add_message_returns_discarded_when_trimming(self):
+    def test_add_message_returns_discarded_when_trimming(self, tmp_path):
         """消息数超过窗口 → add_message 返回被丢弃的消息。"""
-        memory = self._fresh_memory(max_messages=3)
+        memory = self._fresh_memory(max_messages=3, db_path=str(tmp_path / "trim.db"))
 
         memory.add_message(role="user", content="msg1")
         memory.add_message(role="assistant", content="reply1")
@@ -161,9 +165,9 @@ class TestChatMemoryTrim:
         assert len(memory.get_message()) == 3
         assert memory.get_message()[0]["content"] == "reply1"
 
-    def test_messages_preserved_after_trim(self):
+    def test_messages_preserved_after_trim(self, tmp_path):
         """裁剪后保留的是最旧消息之后的部分。"""
-        memory = self._fresh_memory(max_messages=2)
+        memory = self._fresh_memory(max_messages=2, db_path=str(tmp_path / "trim.db"))
 
         memory.add_message(role="user", content="old1")
         memory.add_message(role="user", content="old2")
@@ -176,9 +180,9 @@ class TestChatMemoryTrim:
         assert msgs[0]["content"] == "old2"
         assert msgs[1]["content"] == "new1"
 
-    def test_exact_window_size_no_trim(self):
+    def test_exact_window_size_no_trim(self, tmp_path):
         """消息数恰好等于窗口上限 → 不裁剪。"""
-        memory = self._fresh_memory(max_messages=3)
+        memory = self._fresh_memory(max_messages=3, db_path=str(tmp_path / "trim.db"))
 
         memory.add_message(role="user", content="a")
         memory.add_message(role="assistant", content="b")

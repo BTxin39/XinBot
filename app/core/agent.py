@@ -3,7 +3,7 @@ from app.core.schemas import AgentStatus
 from app.core.persona import Persona, PersonaStore
 from app.core.tools.registry import ToolRegistry
 from app.core.tools.manager import ToolManager
-from app.core.tools.guard import ToolGuard, cli_approval_callback
+from app.core.tools.guard import ApprovalCallback, ToolGuard
 from app.core.tools.builtin.system import GetTimeTool, SetEmotionTool, GetStatusTool
 from app.core.tools.builtin.rag import SearchKnowledgeTool, WebSearchTool
 from app.core.tools.builtin.file_ops import ReadFileTool, ListDirectoryTool, WriteFileTool
@@ -23,7 +23,20 @@ MAX_TOOL_ITERATIONS = 5
 
 class Agent:
 
-    def __init__(self, config: RuntimeConfig | None = None):
+    def __init__(
+        self,
+        config: RuntimeConfig | None = None,
+        approval_callback: ApprovalCallback | None = None,
+    ):
+        """构造 Agent。
+
+        Args:
+            config: 运行配置，None 时从磁盘加载。
+            approval_callback: DANGEROUS 工具的审批回调。**由交互层注入**：
+                CLI 传 `app.interfaces.cli.approval.cli_approval_callback`；
+                Web 传 None → `ToolGuard` 按 fail-safe 拒绝危险工具。
+                见 docs/DECISIONS_V0.2.md §9。
+        """
         self.config = config or RuntimeConfig.load()
         validate_config(self.config)
         self.llm = LLMClient(self.config)
@@ -39,8 +52,10 @@ class Agent:
         self._register_mcp_tools()
         self.tool_manager = ToolManager(
             self.tool_registry,
-            guard=ToolGuard(cli_approval_callback),
+            guard=ToolGuard(approval_callback),
         )
+        # 记录当前审批模式，供状态接口暴露（CLI 交互审批 vs Web 默认拒绝）
+        self.approval_mode = "interactive" if approval_callback is not None else "auto-deny"
 
     def _register_builtin_tools(self) -> None:
         self.tool_registry.register(GetTimeTool())

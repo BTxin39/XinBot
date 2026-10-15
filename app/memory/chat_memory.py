@@ -70,6 +70,37 @@ class ChatMemory(BaseMemory):
         """返回当前内存中的所有消息。"""
         return self.messages
 
+    def sync_if_stale(self) -> bool:
+        """检测并同步外部（另一进程）对本记忆的修改。
+
+        为什么需要（docs/DECISIONS_V0.2.md 缺陷 D4）：CLI 与 Web 可能同时运行，
+        而 `self.messages` 是进程内缓存——Web 端切换记忆或改写消息后，
+        常驻的 CLI 进程会继续读写旧数据。
+
+        检测两个信号，任一命中即从 SQLite 重新加载：
+            1. 磁盘上的 `current_memory_name` 与本进程持有的不同（外部激活了别的记忆）；
+            2. 数据库里消息条数与缓存不一致（外部增删/清空）。
+
+        Returns:
+            True 表示发生了重新加载。
+        """
+        disk_config = RuntimeConfig.load()
+        active_name = disk_config.current_memory_name
+        if active_name != self._current_memory_name:
+            self.config = disk_config
+            self.switch_memory(active_name)
+            return True
+
+        stored_count = self._store.get_message_count(self._current_memory_name)
+        if stored_count == len(self.messages):
+            return False
+
+        self.messages = self._store.get_messages(
+            self._current_memory_name,
+            limit=self.config.max_memory_messages,
+        )
+        return True
+
     def clear(self):
         """清空当前 memory 的所有消息（SQLite + 内存）。"""
         self._store.clear_messages(self._current_memory_name)

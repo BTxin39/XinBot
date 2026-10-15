@@ -1,8 +1,8 @@
 import httpx
 from typer.testing import CliRunner
 
-from app.cli.app import app
-from app.web import process
+from app.interfaces.cli.app import app
+from app.interfaces.web import process
 
 
 def test_cli_controls(monkeypatch):
