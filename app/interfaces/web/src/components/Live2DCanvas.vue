@@ -11,15 +11,44 @@ const zoom = ref(1);
 let application, model, observer, animation, generation = 0, spriteImage, lastFrame = 0, frame = 0, row = 0, interactionUntil = 0;
 let baseWidth = 1, baseHeight = 1;
 let middleDrag = null;
-let corePromise;
-function loadCore() {
-  if (window.Live2DCubismCore) return Promise.resolve();
-  if (!corePromise) corePromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script'); script.src = '/vendor/live2dcubismcore.min.js';
-    script.onload = resolve; script.onerror = () => { corePromise = null; reject(new Error('Cubism Core 未安装')); };
+const coreLoaded = {};
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`运行时加载失败：${src.split('/').pop()}`));
     document.head.appendChild(script);
   });
-  return corePromise;
+}
+/**
+ * 按模型格式加载对应运行时。
+ *  - Cubism 3/4/5 → live2dcubismcore.min.js + ../live2d/cubism4.js
+ *  - Cubism 2.1    → live2d.min.js        + ../live2d/cubism2.js
+ *
+ * 两个 runtime 都用**动态 import**（路径是字面量，Vite 能静态分析并拆成独立 chunk）。
+ * 关键原因：cubism2 模块在求值阶段就要求 window.Live2D 存在，静态导入会让整个
+ * bundle 崩溃 → 页面空白。必须先加载 core，再 import。
+ */
+async function loadRuntime(format) {
+  const cubism2 = format === 'cubism2';
+  const key = cubism2 ? 'cubism2' : 'cubism4';
+  if (!coreLoaded[key]) {
+    if (cubism2) {
+      if (!window.Live2D) await loadScript('/vendor/live2d.min.js');
+      if (!window.Live2D) throw new Error('缺少 Cubism 2.1 运行时：请把 live2d.min.js 放入 pet/vendor/');
+    } else {
+      if (!window.Live2DCubismCore) await loadScript('/vendor/live2dcubismcore.min.js');
+      if (!window.Live2DCubismCore) throw new Error('缺少 Cubism Core：请运行 scripts/download_live2d.py');
+    }
+    coreLoaded[key] = true;
+  }
+  const PIXI = await import('pixi.js');
+  window.PIXI = PIXI;
+  const { Live2DModel } = cubism2
+    ? await import('../live2d/cubism2.js')
+    : await import('../live2d/cubism4.js');
+  return { PIXI, Live2DModel };
 }
 function resize() {
   if (!host.value) return;
@@ -41,9 +70,7 @@ async function load() {
   if (!pet.value || !canvas.value) { loading.value = false; return; }
   try {
     if (pet.value.type === 'live2d') {
-      await loadCore();
-      const PIXI = await import('pixi.js'); window.PIXI = PIXI;
-      const { Live2DModel } = await import('pixi-live2d-display/cubism4');
+      const { PIXI, Live2DModel } = await loadRuntime(pet.value.format);
       if (version !== generation) return;
       const instance = await Live2DModel.from(pet.value.url, { autoInteract: true });
       if (version !== generation) { instance.destroy(); return; }

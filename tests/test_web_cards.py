@@ -17,6 +17,7 @@ from app.memory.profile import MemoryProfile
 from app.llm.registry import LLMRegistry
 from app.rag.document import DocumentChunker
 from app.services.agent_runtime import AgentRuntime
+from app.services import live2d_service
 from app.interfaces.web.character_cards import read_card, validate_card, export_card
 from app.interfaces.web.routes import models
 from app.interfaces.web.server import app
@@ -40,8 +41,11 @@ def client(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(PersonaStore, "_instance", None)
     AgentRuntime.reset_for_tests()
+    # 外观模型的根目录现在由 service 持有（CLI 与 Web 共用同一实现），
+    # 因此隔离点从 routes.models 移到了 live2d_service。
+    monkeypatch.setattr(live2d_service, "UPLOAD_ROOT", tmp_path / "pets")
+    # 密钥写入用 ROOT/.env：必须一起隔离，否则测试会写真实 .env
     monkeypatch.setattr(models, "ROOT", tmp_path)
-    monkeypatch.setattr(models, "UPLOAD_ROOT", tmp_path / "pets")
     PersonaStore.get()
     RuntimeConfig(db_path=str(tmp_path / "memory.db")).save()
     with TestClient(app, base_url="http://127.0.0.1", raise_server_exceptions=False) as instance:
@@ -62,15 +66,17 @@ def card():
 
 
 def test_pet_storage_paths():
+    """外观目录必须与静态挂载点一致（P5 后 ROOT 由 app.paths.repo_root() 提供）。"""
     from app.interfaces.web.server import ROOT
     from scripts.download_live2d import ROOT as download_root
+
     assert models.MODEL_ROOT == ROOT / "pet/live2d"
-    assert models.UPLOAD_ROOT == ROOT / "pet/imported"
+    assert live2d_service.UPLOAD_ROOT == ROOT / "pet/imported"
     assert download_root == ROOT / "pet"
     mounts = {route.path: Path(route.app.directory) for route in app.routes
               if hasattr(getattr(route, "app", None), "directory")}
     assert mounts["/models"] == models.MODEL_ROOT
-    assert mounts["/media/pets"] == models.UPLOAD_ROOT
+    assert mounts["/media/pets"] == live2d_service.UPLOAD_ROOT
     assert mounts["/vendor"] == ROOT / "pet/vendor"
     assert mounts["/codexpet"] == ROOT / "pet/codexpet"
 
@@ -146,7 +152,7 @@ def test_invalid_inputs_and_origin(client):
     assert client.post("/api/persona", json={}, headers={"origin": "https://evil.example"}).status_code == 403
 
 
-def test_keys_not_exposed(client, monkeypatch):
+def test_keys_not_exposed(client, monkeypatch, tmp_path):
     from app.interfaces.web.credentials import credential_name
     monkeypatch.delenv(credential_name("test"), raising=False)
     connection = {"name": "test", "base_url": "https://example.com/v1", "model": "test-model", "api_key": "secret-value"}
@@ -155,7 +161,8 @@ def test_keys_not_exposed(client, monkeypatch):
     assert "secret-value" not in response.text
     connection["api_key"] = ""
     assert client.post("/api/models", json=connection).status_code == 200
-    assert LLMRegistry(models.ROOT / "registry.json").get_provider("test").api_key == "secret-value"
+    # 注册表路径在 fixture 里被隔离到 tmp_path，按同一路径读取校验
+    assert LLMRegistry(tmp_path / "registry.json").get_provider("test").api_key == "secret-value"
     assert "secret-value" not in client.get("/api/config").text
 
 
@@ -176,7 +183,9 @@ def test_sprite_zip(client):
         archive.writestr("spritesheet.webp", sprite.getvalue())
     response = client.post("/api/pet/models/import", files={"file": ("sprite.zip", buffer.getvalue())})
     assert response.status_code == 200
-    assert any(item["name"] == "Sprite" for item in response.json()["data"])
+    # 导入接口现在返回本次导入的模型摘要 + 刷新后的完整列表
+    assert response.json()["data"]["model"]["name"] == "Sprite"
+    assert any(item["name"] == "Sprite" for item in response.json()["data"]["models"])
 
 
 def test_chat_transport(client, monkeypatch):

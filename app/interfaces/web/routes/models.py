@@ -1,32 +1,199 @@
-import json
-import shutil
-import zipfile
-from io import BytesIO
+"""桌宠外观模型与 LLM 连接的接口。
+
+外观部分只做协议转换：格式识别、校验、导入全部在
+`app/services/live2d_service.py`（CLI 的 `xinbot model import` 走同一实现）。
+"""
+
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Literal
-from uuid import uuid4
 
 import httpx
-
 from fastapi import APIRouter, HTTPException, UploadFile
 from pydantic import BaseModel, Field, HttpUrl
-from PIL import Image
 
+from app.interfaces.web.credentials import credential_name, validate_secret, write_secret
 from app.paths import repo_root
+from app.services import live2d_service
 from app.services.agent_runtime import AgentRuntime
 from app.services.llm_config_service import (
     LLMConfigError,
     LLMConfigService,
     validate_endpoint,
 )
-from app.interfaces.web.credentials import credential_name, validate_secret, write_secret
 
 router = APIRouter(prefix="/api")
 ROOT = repo_root()
-MODEL_ROOT = ROOT / "pet/live2d"
-UPLOAD_ROOT = ROOT / "pet/imported"
 
+# 目录与运行时信息以 service 为准（CLI 也用同一份）
+MODEL_ROOT = ROOT / "pet/live2d"
+CODEXPET_ROOT = ROOT / "pet/codexpet"
+
+
+# ── 外观：扫描与导入 ──────────────────────────────────────────────
+
+def catalog(root: Path, prefix: str, category: str) -> list[dict]:
+    """扫描一个目录，返回可用的外观资源。
+
+    与 `live2d_service.catalog()` 的区别：这里额外补上前端需要的
+    `id` / `url` / 精灵图参数等字段。
+    """
+    results: list[dict] = []
+    if not root.exists():
+        return results
+
+    for manifest in sorted(root.rglob("*" + live2d_service.CUBISM3_SUFFIX)):
+        results.append(_live2d_entry(manifest, root, prefix, category, "cubism3"))
+
+    for manifest in sorted(root.rglob("*" + live2d_service.CUBISM2_SUFFIX)):
+        try:
+            package = live2d_service.validate(live2d_service.ModelCandidate(
+                manifest=manifest, root=manifest.parent, kind="cubism2",
+                name=manifest.name[: -len(live2d_service.CUBISM2_SUFFIX)],
+            ))
+        except live2d_service.ModelImportError:
+            continue  # 目录里的旧格式条目同样要完整校验，避免列出加载必失败的
+        entry = _live2d_entry(manifest, root, prefix, category, "cubism2")
+        entry["name"] = package.name
+        entry["warnings"] = package.warnings
+        results.append(entry)
+
+    for manifest in sorted(root.rglob(live2d_service.SPRITE_MANIFEST)):
+        try:
+            package = live2d_service.validate(live2d_service.ModelCandidate(
+                manifest=manifest, root=manifest.parent, kind="sprite", name=manifest.parent.name
+            ))
+            sprite = (package.root / package.spritesheet).resolve()
+            if not sprite.is_relative_to(root.resolve()) or not sprite.is_file():
+                continue
+        except (live2d_service.ModelImportError, KeyError, TypeError):
+            continue
+        results.append({
+            "id": f"{category}:{manifest.relative_to(root).as_posix()}",
+            "name": package.name,
+            "type": "sprite",
+            "format": "sprite",
+            # 精灵图不需要额外运行时
+            "runtime_ready": True,
+            "url": f"{prefix}/{sprite.relative_to(root.resolve()).as_posix()}",
+            "columns": live2d_service.SPRITE_COLUMNS,
+            "rows": live2d_service.SPRITE_ROWS,
+            "frames": live2d_service.SPRITE_FRAME_COUNTS,
+            "_mtime": _mtime(manifest),
+        })
+
+    return results
+
+
+def _mtime(manifest: Path) -> float:
+    """清单文件修改时间，用于"重复导入时保留最新一份"的判断。"""
+    try:
+        return manifest.stat().st_mtime
+    except OSError:
+        return 0.0
+
+
+def _live2d_entry(manifest: Path, root: Path, prefix: str, category: str, kind: str) -> dict:
+    suffix = live2d_service.CUBISM3_SUFFIX if kind == "cubism3" else live2d_service.CUBISM2_SUFFIX
+    relative = manifest.relative_to(root).as_posix()
+    state = live2d_service.runtime_state().get(kind, {})
+    return {
+        "id": f"{category}:{relative}",
+        "name": manifest.name[: -len(suffix)],
+        "type": "live2d",
+        "format": kind,
+        "url": f"{prefix}/{relative}",
+        # 让前端/CLI 能提前知道这个模型是否缺运行时，而不是加载时才失败
+        "runtime_ready": state.get("ready", True),
+        "runtime_missing": state.get("missing_hint", "") if not state.get("ready", True) else "",
+        "_mtime": _mtime(manifest),
+    }
+
+
+def collect_models() -> list[dict]:
+    assets = catalog(MODEL_ROOT, "/models", "live2d")
+    assets += catalog(CODEXPET_ROOT, "/codexpet", "codex")
+    assets += _dedupe(catalog(live2d_service.UPLOAD_ROOT, "/media/pets", "imported"))
+    return assets
+
+
+def _dedupe(assets: list[dict]) -> list[dict]:
+    """同一模型被重复导入会产生多个目录：只保留最近导入的一份。
+
+    与 `live2d_service.catalog()` 的去重规则保持一致，避免界面上出现重复条目。
+    路径里带 uuid，排序不能代表新旧，因此比较清单文件的修改时间。
+    """
+    best: dict[tuple[str, str], dict] = {}
+    for asset in assets:
+        key = (asset.get("format", ""), asset["name"])
+        current = best.get(key)
+        if current is None or asset.get("_mtime", 0.0) > current.get("_mtime", 0.0):
+            best[key] = asset
+    priority = {"cubism3": 0, "cubism2": 1, "sprite": 2}
+    ordered = sorted(
+        best.values(), key=lambda item: (priority.get(item.get("format"), 9), item["name"])
+    )
+    for asset in ordered:
+        asset.pop("_mtime", None)
+    return ordered
+
+
+@router.get("/pet/models")
+def pet_models():
+    return {"ok": True, "data": collect_models()}
+
+
+@router.get("/pet/runtimes")
+def pet_runtimes():
+    """各 Live2D 版本的运行时就绪状态。"""
+    return {"ok": True, "data": live2d_service.runtime_state()}
+
+
+@router.post("/pet/models/import")
+def import_model(file: UploadFile):
+    content = file.file.read(live2d_service.MAX_ARCHIVE_BYTES + 1)
+    try:
+        imported = live2d_service.import_from_bytes(content)
+    except live2d_service.ModelImportError as error:
+        raise HTTPException(422, str(error)) from error
+    # 返回导入摘要 + 刷新后的列表：前端不必再请求一次
+    return {"ok": True, "data": {"model": imported, "models": collect_models()}}
+
+
+class RenameInput(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+
+
+def _model_http_error(error: live2d_service.ModelImportError) -> HTTPException:
+    status = {
+        "missing": 404,
+        "conflict": 409,
+        "invalid_name": 422,
+        "invalid_path": 422,
+    }.get(error.code, 422)
+    return HTTPException(status, str(error))
+
+
+@router.delete("/pet/models/{name:path}")
+def delete_model_route(name: str):
+    """删除一个已导入的模型（只动 pet/imported/ 下的内容）。"""
+    try:
+        result = live2d_service.remove_model(name)
+    except live2d_service.ModelImportError as error:
+        raise _model_http_error(error) from error
+    return {"ok": True, "data": {"removed": result, "models": collect_models()}}
+
+
+@router.put("/pet/models/{name:path}")
+def rename_model_route(name: str, body: RenameInput):
+    """重命名一个已导入的模型。"""
+    try:
+        result = live2d_service.rename_model(name, body.name)
+    except live2d_service.ModelImportError as error:
+        raise _model_http_error(error) from error
+    return {"ok": True, "data": {"model": result, "models": collect_models()}}
+
+
+# ── LLM 连接 ──────────────────────────────────────────────────────
 
 class Connection(BaseModel):
     name: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,60}$")
@@ -48,11 +215,6 @@ def models():
 
 @router.post("/models")
 def save_connection(body: Connection):
-    """保存连接（服务商 + 模型）。
-
-    校验在 `LLMConfigService.prepare_connection()`，**密钥落盘留在本适配器**
-    （只有网页侧管理 `.env`）。校验全部通过后才写密钥，避免"密钥写了但连接没存"。
-    """
     with AgentRuntime.lock:
         service = LLMConfigService()
         try:
@@ -66,8 +228,6 @@ def save_connection(body: Connection):
             )
         except LLMConfigError as error:
             raise _http_error(error) from error
-        except ValueError as error:  # validate_secret 的字符校验
-            raise HTTPException(422, str(error)) from error
 
         if prepared["needs_key_write"]:
             try:
@@ -148,7 +308,6 @@ def delete_provider(name: str):
             service.remove_provider(name)
         except LLMConfigError as error:
             raise _http_error(error) from error
-        # 连接已移除；密钥非共用时一并清除
         if env_name and not shared:
             write_secret(ROOT, env_name, None)
     return models()
@@ -174,92 +333,3 @@ def ollama_models(body: OllamaRequest):
     except (httpx.HTTPError, ValueError, KeyError, TypeError):
         raise HTTPException(502, "无法连接 Ollama，请确认本机服务已启动")
 
-
-def catalog(root: Path, prefix: str, category: str):
-    results = []
-    if not root.exists():
-        return results
-    for file in sorted(root.rglob("*.model3.json")):
-        relative = file.relative_to(root).as_posix()
-        results.append({"id": f"{category}:{relative}", "name": file.name.removesuffix(".model3.json"),
-                        "type": "live2d", "url": f"{prefix}/{relative}"})
-    for file in sorted(root.rglob("pet.json")):
-        try:
-            pet = json.loads(file.read_text(encoding="utf-8-sig"))
-            sprite = (file.parent / pet["spritesheetPath"]).resolve()
-            if not sprite.is_relative_to(root.resolve()) or not sprite.is_file():
-                continue
-            results.append({"id": f"{category}:{file.relative_to(root).as_posix()}",
-                            "name": pet.get("displayName", file.parent.name), "type": "sprite",
-                            "url": f"{prefix}/{sprite.relative_to(root.resolve()).as_posix()}",
-                            "columns": 8, "rows": 9, "frames": [6, 8, 8, 4, 5, 8, 6, 6, 6]})
-        except (ValueError, KeyError, TypeError):
-            continue
-    return results
-
-
-@router.get("/pet/models")
-def pet_models():
-    assets = catalog(MODEL_ROOT, "/models", "live2d")
-    assets += catalog(ROOT / "pet/codexpet", "/codexpet", "codex")
-    assets += catalog(UPLOAD_ROOT, "/media/pets", "imported")
-    return {"ok": True, "data": assets}
-
-
-@router.post("/pet/models/import")
-def import_model(file: UploadFile):
-    content = file.file.read(64 * 1024 * 1024 + 1)
-    if len(content) > 64 * 1024 * 1024:
-        raise HTTPException(413, "模型压缩包不能超过 64 MB")
-    try:
-        archive = zipfile.ZipFile(BytesIO(content))
-    except zipfile.BadZipFile:
-        raise HTTPException(422, "请上传 ZIP 模型包")
-    with archive, TemporaryDirectory() as temp:
-        target = Path(temp).resolve()
-        members = archive.infolist()
-        if len(members) > 1500 or sum(item.file_size for item in members) > 256 * 1024 * 1024:
-            raise HTTPException(413, "解压后模型过大")
-        allowed = {".json", ".moc3", ".png", ".webp", ".jpg", ".jpeg", ".wav", ".mp3", ".txt", ".md"}
-        for item in members:
-            destination = (target / item.filename.replace("\\", "/")).resolve()
-            if not destination.is_relative_to(target):
-                raise HTTPException(422, "模型包包含无效路径")
-            if item.is_dir():
-                continue
-            if destination.suffix.lower() not in allowed:
-                raise HTTPException(422, "模型包包含不支持的文件类型")
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            with archive.open(item) as source, destination.open("wb") as output:
-                shutil.copyfileobj(source, output)
-        assets = catalog(target, "", "preview")
-        if not assets:
-            raise HTTPException(422, "未找到 .model3.json 或 pet.json + 精灵图")
-        for asset in assets:
-            if asset["type"] == "sprite":
-                try:
-                    with Image.open(target / asset["url"].lstrip("/")) as picture:
-                        if picture.width % 8 or picture.height % 9:
-                            raise ValueError("Invalid sprite dimensions")
-                        picture.verify()
-                except (OSError, ValueError, Image.DecompressionBombError) as error:
-                    raise HTTPException(422, "精灵图必须是有效的 8 列 9 行图片") from error
-            if asset["type"] == "live2d":
-                model_file = target / asset["url"].lstrip("/")
-                manifest = json.loads(model_file.read_text(encoding="utf-8-sig"))
-                refs = manifest.get("FileReferences", {})
-                paths = [refs.get("Moc", ""), *refs.get("Textures", [])]
-                if not refs.get("Textures"):
-                    raise HTTPException(422, "Live2D 模型缺少纹理")
-                paths.extend(refs[key] for key in ("Physics", "Pose", "DisplayInfo", "UserData") if refs.get(key))
-                paths.extend(item.get("File", "") for item in refs.get("Expressions", []))
-                for motions in refs.get("Motions", {}).values():
-                    paths.extend(item.get("File", "") for item in motions)
-                    paths.extend(item["Sound"] for item in motions if item.get("Sound"))
-                for path in paths:
-                    resolved = (model_file.parent / path).resolve()
-                    if not path or not resolved.is_relative_to(target) or not resolved.is_file():
-                        raise HTTPException(422, "Live2D 模型缺少本地模型或纹理文件")
-        UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(target, UPLOAD_ROOT / uuid4().hex)
-    return pet_models()

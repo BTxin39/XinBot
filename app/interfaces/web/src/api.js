@@ -37,7 +37,23 @@ export default {
   models: () => request('GET', '/api/models'),
   saveConnection: data => request('POST', '/api/models', data),
   pets: () => request('GET', '/api/pet/models'),
+  petRuntimes: () => request('GET', '/api/pet/runtimes'),
   importPet: file => upload('/api/pet/models/import', file),
+  deletePet: name => request('DELETE', `/api/pet/models/${id(name)}`),
+  renamePet: (name, newName) => request('PUT', `/api/pet/models/${id(name)}`, { name: newName }),
+  logs: (limit = 100, level) => {
+    const query = new URLSearchParams({ limit: String(limit) });
+    if (level) query.set('level', level);
+    return request('GET', `/api/logs?${query}`);
+  },
+  logsStatus: () => request('GET', '/api/logs/status'),
+  clearLogs: () => request('DELETE', '/api/logs'),
+  // 日志导出：取较多条数后由前端落成 .log 文件
+  exportLogs: (limit = 500, level) => {
+    const query = new URLSearchParams({ limit: String(limit) });
+    if (level) query.set('level', level);
+    return request('GET', `/api/logs?${query}`);
+  },
   listPersonas: () => request('GET', '/api/persona'),
   createPersona: data => request('POST', '/api/persona', data),
   updatePersona: (name, data) => request('PUT', `/api/persona/${id(name)}`, data),

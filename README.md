@@ -1,4 +1,4 @@
-# XinBot v0.1.0
+# XinBot v0.2.0
 
 本机 AI 桌宠工作区：左侧 Live2D / Codex 精灵图，右侧聊天、角色卡和记忆管理。
 
@@ -6,6 +6,7 @@
 
 首次使用请按 [完整使用手册](docs/USER_GUIDE.md) 操作，包含安装启动、首次聊天、
 API Key 与 Ollama 配置、角色卡与外观、记忆终端、字符画、端口修改和常见问题。
+偏好命令行的用法见 [命令行手册](docs/CLI.md)。
 
 最短上手流程：启动服务 → 左侧“设置”添加连接 → “运行配置”选择模型并应用 →
 “角色卡”选择角色并点击“开始对话” → 左侧“对话”发送消息。
@@ -13,23 +14,33 @@ API Key 与 Ollama 配置、角色卡与外观、记忆终端、字符画、端�
 
 ## 快速启动
 
-两个启动入口按以下顺序使用：
-
 ```powershell
-xinbot start cli   # 终端桌宠
-xinbot start web   # 网页桌宠：http://127.0.0.1:3796
+xinbot start web             # 网页桌宠：http://127.0.0.1:3796
+xinbot start cli             # 终端桌宠
+xinbot logs --follow         # 另一个终端：实时查看后端运行日志
 xinbot start --show          # 查询运行状态、PID 和地址
 xinbot start web --shutdown  # 关闭本项目的网页后端
 ```
 
-`xinbot start` 显示帮助，`web` 位于 `cli` 下方。未激活虚拟环境时使用 `uv run xinbot …`。
+`xinbot start` 显示帮助。未激活虚拟环境时使用 `uv run xinbot …`。
 `xinbot start web` 在后台启动服务并打开 `http://127.0.0.1:3796/#/`；重复执行会打开已运行的页面，不重复启动。
-关闭网页或启动终端不会停止后台服务，请使用 `--shutdown`。日志位于 `data/web.log`。
+关闭网页或启动终端不会停止后台服务，请使用 `--shutdown`。进程日志位于 `data/web.log`。
 网页地址的端口前是冒号 `:3796`，不是路径 `/3796`。
 
 需要 Python 3.12+ 和 [uv](https://docs.astral.sh/uv/getting-started/installation/)。首次安装依赖需要联网。
 
-下载并解压 `dist/XinBot-v0.1.0.zip`，在目录内运行：
+### 从 v0.1 升级到 v0.2
+
+v0.2 把适配器层从 `app/cli`、`app/web` 迁到了 `app/interfaces/`，**控制台入口点也随之改变**。
+因此升级后必须重装一次，否则 `xinbot` 会报 `No module named 'app.cli'`：
+
+```powershell
+uv sync                 # 或：uv pip install --no-deps -e .
+```
+
+用户数据（`data/`、`pet/`、`.env`）无需迁移，保持原位置即可。
+
+下载并解压 `dist/XinBot-v0.2.0.zip`，在目录内运行：
 
 ```powershell
 ./start.ps1
@@ -75,15 +86,68 @@ uv run xinbot start web
 “从故事提取角色”支持 UTF-8 TXT、Markdown 和可提取文本的 PDF。文件限制 2 MB，解析文本限制 120000 字，最多预览 12 名角色；候选由 AI 提取，需逐个确认保存，导入前请核对姓名与经历。扫描版 PDF 不支持 OCR。聊天支持 PNG/JPEG/WebP 图片和文本型 PDF（每份最多 2 MB）；图片理解要求当前模型支持视觉输入。深度思考开关通过回答指令调整分析细致度，不保证调用模型原生的推理参数。Enter 发送，Shift+Enter 换行。
 
 桌宠资产统一存放在根目录 `pet/`，整个目录由 `.gitignore` 排除，不纳入发布包。
-`pet/live2d/` 为 Live2D，`pet/codexpet/` 为 Codex 精灵包，`pet/imported/` 为网页导入模型，`pet/vendor/` 为 Cubism Core。
+`pet/live2d/` 为内置 Live2D，`pet/codexpet/` 为 Codex 精灵包，`pet/imported/` 为导入模型，`pet/vendor/` 为运行时 core。
 旧版本升级请按 [使用手册的迁移说明](docs/USER_GUIDE.md#10-常见问题与备份) 移动资产，保留内部相对路径。
+
+### 支持的外观格式
+
+外观页与 `xinbot model import` 使用同一套识别与校验逻辑，**不需要手工指定格式**：
+
+| 格式 | 清单文件 | 需要运行时 | 备注 |
+|------|----------|-----------|------|
+| Live2D Cubism 3/4/5 | `*.model3.json` | `live2dcubismcore.min.js` | 推荐，兼容性最好 |
+| Live2D Cubism 2.1（旧版） | `*.model.json` | `live2d.min.js` | 可导入，但需自行放置运行时 |
+| Codex 精灵图 | `pet.json` + 8×9 网格图 | 无 | 最省事 |
+
+- **允许压缩包里夹带 `css/js/images` 等网页资源**（Live2DViewerEX 导出包、网页 demo 解包都长这样），
+  导入时会自动丢弃与渲染无关的目录；
+- 多模型合集（一个 ZIP 里放了整套模型库）会优先取 Cubism 3+，同格式仍有多个则报错并列出候选；
+- 深层嵌套目录会被展开为 `pet/imported/<uuid>/<模型名>/`；
+- 缺文件时报错会明确指出**缺哪一个引用**（如"模型缺少纹理：textures/texture_00.png"）。
+
+命令行用法：
+
+```powershell
+xinbot model import scratch/miku.zip   # 导入
+xinbot model list                      # 已导入模型 + 运行时状态
+xinbot model rename miku 初音           # 重命名（同步清单文件名）
+xinbot model remove 初音                # 删除（只动 pet/imported/）
+xinbot model runtimes                  # 各格式运行时就绪情况
+```
+
+网页外观页同样可以悬停卡片、点右上角按钮删除或重命名；内置目录（`pet/live2d`、`pet/codexpet`）中的模型不提供这两个操作。
+
+`live2d.min.js`（Cubism 2.1 运行时）属于 Live2D 专有 SDK，**不随本项目分发**。
+需要旧版模型时请自行放入 `pet/vendor/live2d.min.js`。Cubism 3/4/5 的 core 可用脚本获取：
+
+```powershell
+uv run python scripts/download_live2d.py
+```
+
+使用与分发任何第三方模型前，请核对 [Live2D 授权](https://www.live2d.com/eula/live2d-free-material-license-agreement_en.html)
+与素材作者的要求。
 
 - 兼容原 Persona 数据，支持酒馆 Character Card V2 JSON/PNG 导入、编辑与 JSON 导出。
 - 开场白、性格、场景、示例对话和提示词进入 Agent；世界书及未知扩展保留但不执行完整酒馆规则。
-- 外观页支持 Live2D ZIP 和 Codex 8×9 精灵图包。模型和角色身份可独立绑定。
-- 下载官方 Haru 测试模型及 Cubism Core：`uv run python scripts/download_live2d.py`。
-  第三方资产不包含在 v0.1 ZIP 中，使用与分发前须核对 [Live2D 授权](https://www.live2d.com/eula/live2d-free-material-license-agreement_en.html)。
+- 模型和角色身份可独立绑定。
 - 当前是浏览器内桌宠，不包含系统级透明置顶、托盘或点击穿透。
+
+## 运行状态与日志
+
+CLI 与网页看的是**同一个后端进程**的日志，两处内容一致：
+
+```powershell
+xinbot logs              # 状态摘要 + 最近 40 条
+xinbot logs -n 200       # 更多
+xinbot logs -l WARNING   # 只看警告及以上
+xinbot logs -f           # 持续跟踪
+xinbot logs export -o logs.log   # 导出为文本（含完整日期与表头）
+xinbot logs clear        # 清空缓冲
+```
+
+网页入口：导航栏 → **运行日志**（`/#/logs`），支持级别筛选、自动刷新与导出。
+日志保存在内存环形缓冲（默认 500 条），不写文件、不无限增长；后端退出即清空。
+异常日志会带完整堆栈。后端未运行时 CLI 会提示"后端可能未运行"并给出下一步命令，而不是打印空列表。
 
 ## 记忆管理
 
@@ -132,15 +196,16 @@ npm ci
 npm run build
 cd ../..
 uv run xinbot start web
-uv run pytest tests/test_web_cards.py tests/test_web_management.py -q
+uv run pytest tests -q
 ```
 
 开发时运行 `xinbot start web --dev` 和 `npm run dev`。Vite 启动时读取保存的端口，
 也可用 `XINBOT_WEB_PORT` 覆盖；修改端口后需重启 Vite。前端始终使用同源 API/WebSocket。
 浏览器测试：在后端启动后进入 `app/interfaces/web` 运行 `npx playwright test --workers=1`，默认使用 Microsoft Edge。
-测试不调用付费模型、不修改真实记忆。更多兼容说明见 `docs/WEB_COMPANION.md`。
+测试不调用付费模型、不修改真实记忆，也不会写真实 `data/`（有套件级护栏检查）。
+更多兼容说明见 `docs/WEB_COMPANION.md`。
 
-## 构建 v0.1 发布包
+## 构建发布包
 
 ```powershell
 cd app/interfaces/web
@@ -150,10 +215,11 @@ cd ../..
 uv run python scripts/package_release.py
 ```
 
-产物：`dist/XinBot-v0.1.0.zip`、对应 SHA256 校验文件；包内 `MANIFEST.json` 列出文件哈希。
+产物：`dist/XinBot-v0.2.0.zip`、对应 SHA256 校验文件；包内 `MANIFEST.json` 列出文件哈希。
 打包脚本使用允许清单，不读取 `.env`、`data/`、`pet/`、上传模型、日志、缓存或 `node_modules`。
 干净目录首次启动从内置公开默认角色生成数据，不携带开发者的私有角色卡。
 
 ## 注意事项
 
-当前release包发布有延迟，较多问题，请直接下载源码
+- 发布包可能滞后于源码，遇到问题请优先使用源码运行。
+- v0.2.0 更换了 CLI 入口点，升级后必须重装依赖（见上文"从 v0.1 升级"）。

@@ -125,14 +125,19 @@ class AgentRuntime:
             yield chunk
         self._latest_message = "".join(collected)
 
-    def refresh_persona(self, name: str) -> bool:
+    @classmethod
+    def refresh_persona(cls, name: str) -> bool:
         """把已运行 Agent 的角色换成最新版本（角色被编辑后调用）。
 
         只有当运行中的 Agent 正使用该角色时才生效；未加载时返回 False，
         因为下次 `agent()` 会自然读到新角色。
         返回 True 表示确实热更新了运行实例。
+
+        注意：这里必须是 **classmethod**。路由是以 `AgentRuntime.refresh_persona(name)`
+        调用的；若写成实例方法，`name` 会被当成 `self`，抛
+        "missing 1 required positional argument: 'name'"（v0.2.1 实际踩过）。
         """
-        agent = self._instance
+        agent = cls.default().current()
         if agent is None or agent.config.persona_name != name:
             return False
 

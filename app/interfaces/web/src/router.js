@@ -6,11 +6,13 @@ import KnowledgeView from "./views/KnowledgeView.vue";
 import AppearanceView from "./views/AppearanceView.vue";
 import MemoryView from "./views/MemoryView.vue";
 import AsciiView from "./views/AsciiView.vue";
+import LogsView from "./views/LogsView.vue";
 
 const routes = [
   { path: "/memory", component: MemoryView },
   { path: "/ascii", component: AsciiView },
   { path: "/appearance", component: AppearanceView },
+  { path: "/logs", name: "logs", component: LogsView },
   { path: "/", name: "home", component: HomeView },
   { path: "/settings", name: "settings", component: SettingsView },
   { path: "/persona", name: "persona", component: PersonaView },

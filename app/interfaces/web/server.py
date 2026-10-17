@@ -1,5 +1,6 @@
 """FastAPI 应用入口 —— 生命周期、CORS、路由挂载、静态文件。"""
 
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI
@@ -8,11 +9,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
+from app import logs as log_store
 from app.paths import repo_root
 from app.services.agent_runtime import AgentRuntime
 from app.interfaces.web.routes import status, chat, config, persona, rag, pet
 from app.interfaces.web.routes import models
-from app.interfaces.web.routes import memory, ascii_art
+from app.interfaces.web.routes import memory, ascii_art, logs as logs_route
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 
@@ -22,10 +24,13 @@ STATIC_DIR = Path(__file__).parent / "static" / "dist"
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     """Allow setup without credentials and release the lazy agent on exit."""
+    # 日志缓冲必须在服务开始处理请求前安装，否则启动早期的日志会丢
+    log_store.install()
+    log_store.mark_server_started()
     try:
         yield
     finally:
-        # 应用退出：确定性释放 Agent（关闭 MCP 子进程）
+        logging.getLogger("xinbot").info("XinBot Web 后端正在关闭")
         AgentRuntime.shutdown()
 
 
@@ -51,6 +56,7 @@ app.include_router(pet.router)
 app.include_router(models.router)
 app.include_router(memory.router)
 app.include_router(ascii_art.router)
+app.include_router(logs_route.router)
 
 
 @app.exception_handler(HTTPException)

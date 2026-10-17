@@ -3,8 +3,10 @@
     <div class="brand">XinBot</div>
     <div class="links">
       <router-link to="/">对话</router-link>
+      <router-link to="/appearance">外观</router-link>
       <router-link to="/persona">角色</router-link>
       <router-link to="/knowledge">知识库</router-link>
+      <router-link to="/logs">运行日志</router-link>
       <router-link to="/settings">设置</router-link>
     </div>
   </nav>
