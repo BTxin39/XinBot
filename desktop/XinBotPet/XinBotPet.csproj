@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    XinBot 桌面常驻桌宠的 C# 宿主。
+
+    为什么不用 pywebview（Python）：
+    它在 Windows 上的透明分支会「先 Show 再 Hide，等 NavigationStarting 再显示」，
+    实测导致 WebView2 停止绘制——页面加载了、模型资源请求了，窗口却全空。
+    而 WinForms 的 `TransparencyKey` 走的是窗口区域裁剪，会把 WebView2 子窗口
+    整块裁掉。两条路都不通，所以换成可控的 C# 宿主：
+    用 `SetLayeredWindowAttributes(LWA_COLORKEY)` 在合成阶段按颜色抠，
+    与 WebView2 的绘制互不干扰。
+
+    构建：dotnet publish -c Release（见 scripts/build_desktop_shell.py）
+  -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>XinBotPet</AssemblyName>
+    <RootNamespace>XinBotPet</RootNamespace>
+    <!-- 单文件发布：用户不需要理解 .NET 运行时 -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
 """运行配置 REST 接口 —— 只做协议转换，业务校验在 `app/services/llm_config_service.py`。
 
-P4 变更（docs/DECISIONS_V0.2.md §5.2、D2）：
+P4 变更（docs/DECISIONS/DECISIONS_V0.2.0.md §5.2、D2）：
     "允许改哪些字段"的策略原先只存在于本端 schema，现收敛为
     `llm_config_service.CONFIG_UPDATE_FIELDS`，CLI 与 Web 共用同一份定义。
     角色-记忆绑定也改为调用 service 中的同一命名规则（D1 的唯一来源）。

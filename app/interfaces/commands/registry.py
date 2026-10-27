@@ -1,6 +1,6 @@
 """斜杠命令注册与执行 —— **不含任何渲染依赖**。
 
-历史问题（docs/DECISIONS_V0.2.md §2.4、§6）：本模块原在 `app/interfaces/commands/handler.py`，
+历史问题（docs/DECISIONS/DECISIONS_V0.2.0.md §2.4、§6）：本模块原在 `app/interfaces/commands/handler.py`，
 198 行里全是 `rich.console.print` / `rich.Table`，导致：
     1. Web 无法复用，只能在 `app/interfaces/web/routes/memory.py` 另写一套手搓 parser；
     2. 命令逻辑与终端呈现耦合，换个前端就得改命令层。

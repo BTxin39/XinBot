@@ -46,6 +46,13 @@ package = true
 
 [project.optional-dependencies]
 image = ["pillow>=11.0.0"]
+# 桌面常驻桌宠（Windows）：透明/置顶/穿透窗口。
+# 单独成组，避免不用桌宠的用户白白多装 pythonnet/clr-loader。
+desktop = [
+    "pywebview>=6.0",
+    "pystray>=0.19",
+    "pywin32>=306; sys_platform == 'win32'",
+]
 
 [dependency-groups]
 dev = [

@@ -1,6 +1,6 @@
 """跨端业务编排层。
 
-依赖方向（docs/DECISIONS_V0.2.md §4、§8）：
+依赖方向（docs/DECISIONS/DECISIONS_V0.2.0.md §4、§8）：
 
     interfaces/{cli,web,commands}  →  services  →  core · config · memory · storage · rag · llm
 

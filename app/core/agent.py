@@ -35,7 +35,7 @@ class Agent:
             approval_callback: DANGEROUS 工具的审批回调。**由交互层注入**：
                 CLI 传 `app.interfaces.cli.approval.cli_approval_callback`；
                 Web 传 None → `ToolGuard` 按 fail-safe 拒绝危险工具。
-                见 docs/DECISIONS_V0.2.md §9。
+                见 docs/DECISIONS/DECISIONS_V0.2.0.md §9。
         """
         self.config = config or RuntimeConfig.load()
         validate_config(self.config)
@@ -134,6 +134,18 @@ class Agent:
         return messages
 
     def stream_chat(self, user_input: str, thinking: bool = False, thinking_strength: int = 2, image: str | None = None):
+        """流式对话：逐段 yield 文本。
+
+        关键点（v0.2.2 改造）：
+          * 之前这里其实是**假流式**——`llm.chat()` 整段返回后才 yield 一次，
+            桌宠气泡要等完整回复才出现；
+          * 现在走 `llm.stream_chat()`，边收边 yield；
+          * 但工具调用必须保持可用，所以流里除了文本 delta 还有
+            `tool_calls` 事件：收到它就执行工具、进入下一轮（见 schemas.StreamEvent）。
+
+        兼容性：调用方都只做"拼接 chunk"，更细的 chunk 不影响它们
+        （CLI 逐块打印、Web 逐块 send_json）。
+        """
         self._observe(user_input)
 
         iterations = 0
@@ -149,29 +161,39 @@ class Agent:
                     if message["role"] == "user":
                         messages[index] = {**message, "content": [{"type": "text", "text": user_input}, {"type": "image_url", "image_url": {"url": image}}]}
                         break
-            response = self.llm.chat(
+
+            streamed: list[str] = []
+            pending_tool_calls: list[dict] = []
+            reasoning: str | None = None
+
+            for event in self.llm.stream_chat(
                 messages=messages,
                 tools=self.tool_registry.get_tools_schema(),
-            )
+            ):
+                if event.kind == "delta":
+                    streamed.append(event.text)
+                    yield event.text
+                elif event.kind == "tool_calls":
+                    pending_tool_calls = event.tool_calls
+                    reasoning = event.reasoning_content
 
-            if response.tool_calls:
-                extra: dict = {"tool_calls": response.tool_calls}
+            if pending_tool_calls:
+                extra: dict = {"tool_calls": pending_tool_calls}
                 # DeepSeek thinking 模型要求回传 reasoning_content
-                if response.reasoning_content is not None:
-                    extra["reasoning_content"] = response.reasoning_content
+                if reasoning is not None:
+                    extra["reasoning_content"] = reasoning
                 self.memory.add_message(
                     role="assistant",
-                    content=response.content,
+                    content="".join(streamed) or None,
                     **extra,
                 )
-                tool_results = self.tool_manager.execute(response.tool_calls)
-                for tr in tool_results:
-                    self.memory.add_message(**tr)
+                tool_results = self.tool_manager.execute(pending_tool_calls)
+                for result in tool_results:
+                    self.memory.add_message(**result)
                 continue
 
-            full_response = response.content or ""
+            full_response = "".join(streamed)
             self._remember(full_response)
-            yield full_response
             return
 
         yield "（已达到最大工具调用次数，请重新输入。）"

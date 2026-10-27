@@ -1,4 +1,4 @@
-"""审批回调注入契约（docs/DECISIONS_V0.2.md §9）。
+"""审批回调注入契约（docs/DECISIONS/DECISIONS_V0.2.0.md §9）。
 
 回归目标（缺陷 D3）：审批模式必须由**构造参数**决定，而不是由调用方事后
 覆盖 `tool_manager._guard`。历史实现里 `Agent` 内建 CLI 回调、Web 再打补丁覆盖，

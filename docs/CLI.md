@@ -28,12 +28,36 @@ xinbot start cli          # 或不打开网页，直接用终端桌宠聊天
 | `xinbot start` | 显示 `start` 的帮助 |
 | `xinbot start cli` | 终端桌宠（Rich UI，斜杠命令对话） |
 | `xinbot start web` | 后台启动网页后端并打开浏览器 |
+| `xinbot start pet` | **桌面常驻桌宠**（透明 / 置顶 / 鼠标穿透） |
 | `xinbot start web --dev` | 开发模式（不托管前端构建产物，配合 Vite） |
 | `xinbot start web --port 4000` | 本次用指定端口 |
 | `xinbot start web --shutdown` | 关闭本项目启动的后端 |
 | `xinbot start --show` | 查询是否在运行、PID 与地址 |
 
 `start web` 会在后台起一个受管子进程，关闭浏览器**不会**停止它，请用 `--shutdown`。
+
+### 1.1 桌面常驻桌宠（v0.2.2 新增）
+
+```powershell
+xinbot start pet                    # 透明 + 置顶 + 鼠标穿透 + 托盘
+xinbot start pet --no-passthrough   # 关闭穿透（能直接点桌宠，调试用）
+xinbot start pet --no-topmost       # 不置顶
+xinbot start pet --no-tray          # 不起托盘图标
+xinbot start pet --autostart on     # 开机自启（只改注册表，不启动窗口）
+xinbot start pet --autostart off
+xinbot start pet --autostart status
+```
+
+- 会自动确保后端在跑（未运行则拉起），**不打开浏览器**；
+- 默认**鼠标穿透**：点桌面上的东西不会被挡，只有点在角色身上才响应；
+- 左键拖动移动位置，松手自动保存到 `data/desktop_pet.json`；
+- 右键菜单：置顶切换 / 穿透切换 / 打开完整界面 / 隐藏 / 退出；
+- **托盘菜单**同上，另含"开机自启"勾选（与 `--autostart` 改的是同一个注册表项）；
+- **语音气泡**：每收到一条新回复会在角色上方弹出，逐字显示后自动淡出；
+- 需要可选依赖：`uv sync --extra desktop`（pywebview + pystray）；
+- 仅 Windows，依赖系统自带的 WebView2 运行时。
+
+v0.2.2 起 `start web` 不再尝试启动桌宠，旧的 `--no-pet` 空选项已删除。
 
 常用参数（`start cli`）：
 
@@ -217,8 +241,26 @@ xinbot rag stats
 xinbot rag remove <来源>
 xinbot rag clear -f                # -f 跳过确认
 ```
-
 标签用于按角色过滤：角色卡的"知识库 TAG"决定它能看到哪些知识源。
+
+## 7.1 语音输出（TTS）
+
+用 **Windows 自带的 SAPI 引擎**，离线、不需要额外安装。默认关闭。
+
+```powershell
+xinbot speech status          # 是否可用、引擎、语速、音量
+xinbot speech on              # 开启（之后每条新回复都会朗读）
+xinbot speech off
+xinbot speech rate 2          # 语速 -10（慢）~ 10（快），0 正常
+xinbot speech volume 80
+xinbot speech test "你好呀"    # 试听，不改变开关状态
+```
+
+- 只在**桌宠窗口开着**时朗读（语音属于"桌宠在场"的行为）；
+- 同一条回复只念一次（轮询会反复送来同一条）；
+- 朗读前会去掉 markdown 记号，超过 200 字截断；
+- 没有中文语音包时只是一句都念不出来，不影响聊天。
+  可在「设置 → 时间和语言 → 语音」里安装中文语音。
 
 ## 8. 调试与自检
 

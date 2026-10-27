@@ -1,6 +1,6 @@
 """命令结果的数据结构 —— 命令层与渲染层之间的契约。
 
-为什么要这一层（docs/DECISIONS_V0.2.md §6）：
+为什么要这一层（docs/DECISIONS/DECISIONS_V0.2.0.md §6）：
 原 `app/interfaces/commands/handler.py` 直接 `rich.console.print`，导致同一套命令逻辑
 无法被 Web 复用（Web 只能在 `app/interfaces/web/routes/memory.py` 里另写一套手搓 parser）。
 

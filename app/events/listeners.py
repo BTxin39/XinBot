@@ -1,6 +1,6 @@
 """情绪变化事件的默认监听器。
 
-归属说明（见 docs/DECISIONS_V0.2.md §8 R4）：
+归属说明（见 docs/DECISIONS/DECISIONS_V0.2.0.md §8 R4）：
 本模块由 `app/core/agent.py` 在构造时订阅，因此它**属于核心的运行时依赖**，
 不得 import 渲染库——原先 `from rich.console import Console` 会让
 任何走 `Agent` 的调用链（包括 Web）都被迫加载 rich，也让命令层无法脱离 rich 复用。

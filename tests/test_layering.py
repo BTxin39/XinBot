@@ -1,4 +1,4 @@
-"""分层纪律护栏（docs/DECISIONS_V0.2.md §8）。
+"""分层纪律护栏（docs/DECISIONS/DECISIONS_V0.2.0.md §8）。
 
 用 AST 静态扫描强制依赖方向，防止重构成果被后续提交悄悄破坏：
 

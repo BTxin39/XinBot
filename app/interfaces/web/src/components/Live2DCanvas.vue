@@ -2,6 +2,12 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { ZoomIn, ZoomOut, RotateCcw, Hand, Pause, Play, Shirt } from 'lucide-vue-next';
 import { pet, state } from '../state.js';
+/**
+ * bare=true：只渲染角色本身（桌面常驻窗用）。
+ * 去掉标题条与工具栏，并且**不显示**加载/错误占位文案——
+ * 在透明窗口里那些文字会直接浮在用户桌面上，非常突兀。
+ */
+const props = defineProps({ bare: { type: Boolean, default: false } });
 const host = ref(null);
 const canvas = ref(null);
 const error = ref('');
@@ -57,12 +63,13 @@ function resize() {
     application.renderer.resize(width, height);
     const scale = Math.min(width * .94 / baseWidth, height * .94 / baseHeight) * zoom.value;
     model.scale.set(scale); model.anchor.set(.5, 1); model.position.set(width / 2, height * .98);
+    recordBounds();
   }
 }
 function cleanup() {
   cancelAnimationFrame(animation);
   if (application) application.destroy(false, { children: true, texture: true, baseTexture: true });
-  application = null; model = null; spriteImage = null;
+  application = null; model = null; spriteImage = null; state.petBounds = null;
 }
 async function load() {
   const version = ++generation;
@@ -76,7 +83,7 @@ async function load() {
       if (version !== generation) { instance.destroy(); return; }
       model = instance; baseWidth = model.width; baseHeight = model.height;
       application = new PIXI.Application({ view: canvas.value, backgroundAlpha: 0, antialias: true, autoDensity: true, resolution: Math.min(devicePixelRatio, 2), preserveDrawingBuffer: true });
-      application.stage.addChild(model); resize();
+      application.stage.addChild(model); resize(); recordBounds();
       application.renderer.render(application.stage);
       state.previews[pet.value.id] = canvas.value.toDataURL('image/png');
       if (paused.value) application.stop();
@@ -105,7 +112,51 @@ function animateSprite(now) {
     (width - size) / 2, (height - size * cellHeight / cellWidth) / 2, size, size * cellHeight / cellWidth);
   animation = requestAnimationFrame(animateSprite);
 }
+/**
+ * 把角色的真实包围盒（CSS 像素）写进共享状态。
+ *
+ * 为什么要这个：桌宠窗口整块是透明的，但**只有角色身上**应该接收鼠标，
+ * 其余区域必须穿透到桌面。窗口矩形远大于角色，用窗口矩形判断会挡住桌面。
+ */
+function recordBounds() {
+  if (!model) return;
+  try {
+    const box = model.getBounds();
+    state.petBounds = {
+      x: Math.round(box.x), y: Math.round(box.y),
+      width: Math.round(box.width), height: Math.round(box.height),
+    };
+  } catch {
+    state.petBounds = null;
+  }
+}
+
 function interact() { if (model) { model.expression(); model.motion('TapBody'); } row = 3; interactionUntil = performance.now() + 2400; }
+
+/**
+ * 执行后端给出的互动反应。
+ *
+ * 动作组名每个模型都不一样，所以后端给的是**候选列表**：
+ * 逐个尝试，第一个能播的就用（末尾的空字符串是 pixi 的"随便挑一个"兜底）。
+ * 这样不需要为每个模型写适配代码。
+ */
+async function applyReaction(target) {
+  row = 3;
+  interactionUntil = performance.now() + 2400;
+  if (!model) return;
+  for (const group of target.motions || []) {
+    try {
+      const played = await model.motion(group);
+      if (played) break;
+    } catch {
+      // 该动作组不存在，继续试下一个候选
+    }
+  }
+  if (typeof target.expression === 'number') {
+    try { await model.expression(target.expression); } catch { /* 模型可能没有表情 */ }
+  }
+}
+watch(() => state.reaction, (value) => { if (value) applyReaction(value); });
 function changeZoom(amount) { zoom.value = Math.max(.6, Math.min(1.6, zoom.value + amount)); resize(); }
 function beginMiddle(event) { if (event.button !== 1) return; event.preventDefault(); middleDrag = {y:event.clientY, zoom:zoom.value}; event.currentTarget.setPointerCapture(event.pointerId); }
 function moveMiddle(event) { if (!middleDrag) return; zoom.value = Math.max(.6, Math.min(1.6, middleDrag.zoom + (middleDrag.y - event.clientY) / 250)); resize(); }
@@ -116,20 +167,22 @@ onUnmounted(() => { generation++; cleanup(); observer?.disconnect(); });
 </script>
 
 <template>
-  <div class="pet-workspace">
+  <div class="pet-workspace" :class="{ bare: props.bare }">
     <div class="pet-stage" ref="host" @click="interact" @pointerdown="beginMiddle" @pointermove="moveMiddle" @pointerup="middleDrag=null" @pointercancel="middleDrag=null" @auxclick.prevent>
       <canvas :key="pet?.id" ref="canvas" :aria-label="pet?.name || '桌宠'" />
-      <div v-if="loading || error || !pet" class="stage-status" role="status">{{ error || (loading ? '正在唤醒…' : '还没有桌宠模型') }}<button v-if="error" @click.stop="load">重新加载</button></div>
+      <div v-if="!props.bare && (loading || error || !pet)" class="stage-status" role="status">{{ error || (loading ? '正在唤醒…' : '还没有桌宠模型') }}<button v-if="error" @click.stop="load">重新加载</button></div>
     </div>
-    <div class="pet-caption"><span>{{ pet?.name || '未选择外观' }}</span><span class="badge">{{ pet?.type === 'live2d' ? 'Live2D' : 'Sprite' }}</span></div>
-    <div class="pet-toolbar">
-      <button class="icon-button" title="缩小" aria-label="缩小" @click="changeZoom(-.1)"><ZoomOut :size="18"/></button>
-      <button class="icon-button" title="重置视角" aria-label="重置视角" @click="zoom = 1; resize()"><RotateCcw :size="17"/></button>
-      <button class="icon-button" title="放大" aria-label="放大" @click="changeZoom(.1)"><ZoomIn :size="18"/></button>
-      <span class="divider"/>
-      <button class="icon-button" :title="paused ? '播放' : '暂停'" :aria-label="paused ? '播放' : '暂停'" @click="toggle"><component :is="paused ? Play : Pause" :size="17"/></button>
-      <button class="icon-button" title="打招呼" aria-label="打招呼" @click="interact"><Hand :size="18"/></button>
-      <RouterLink class="icon-button" title="更换外观" aria-label="更换外观" to="/appearance"><Shirt :size="18"/></RouterLink>
-    </div>
+    <template v-if="!props.bare">
+      <div class="pet-caption"><span>{{ pet?.name || '未选择外观' }}</span><span class="badge">{{ pet?.type === 'live2d' ? 'Live2D' : 'Sprite' }}</span></div>
+      <div class="pet-toolbar">
+        <button class="icon-button" title="缩小" aria-label="缩小" @click="changeZoom(-.1)"><ZoomOut :size="18"/></button>
+        <button class="icon-button" title="重置视角" aria-label="重置视角" @click="zoom = 1; resize()"><RotateCcw :size="17"/></button>
+        <button class="icon-button" title="放大" aria-label="放大" @click="changeZoom(.1)"><ZoomIn :size="18"/></button>
+        <span class="divider"/>
+        <button class="icon-button" :title="paused ? '播放' : '暂停'" :aria-label="paused ? '播放' : '暂停'" @click="toggle"><component :is="paused ? Play : Pause" :size="17"/></button>
+        <button class="icon-button" title="打招呼" aria-label="打招呼" @click="interact"><Hand :size="18"/></button>
+        <RouterLink class="icon-button" title="更换外观" aria-label="更换外观" to="/appearance"><Shirt :size="18"/></RouterLink>
+      </div>
+    </template>
   </div>
 </template>

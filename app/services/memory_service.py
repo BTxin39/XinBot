@@ -1,4 +1,4 @@
-"""记忆业务编排 —— 跨端唯一入口（docs/DECISIONS_V0.2.md §5.2、§7）。
+"""记忆业务编排 —— 跨端唯一入口（docs/DECISIONS/DECISIONS_V0.2.0.md §5.2、§7）。
 
 解决的缺陷 **D4**：此前 CLI 经 `ChatMemory`、Web 直接开 `SQLiteStore`，
 两边各自实现"列表 / 读取 / 建删 / 清空 / 激活"的编排与校验，容易漂移。
@@ -23,7 +23,7 @@ from app.storage.sqlite_store import SQLiteStore
 
 # 角色记忆名的历史前缀。
 #
-# ⚠️ 决策记录（docs/DECISIONS_V0.2.md §5.3 / Q1）：**保留 `web-` 前缀，不做改名迁移。**
+# ⚠️ 决策记录（docs/DECISIONS/DECISIONS_V0.2.0.md §5.3 / Q1）：**保留 `web-` 前缀，不做改名迁移。**
 # 理由：该前缀已在 docs/WEB_COMPANION.md 中作为对外承诺写明，改名需要改写用户
 # data/xinbot.db 中的记忆键，属于不可逆操作；而"两端命名不一致"的真正危害
 # （CLI 切角色不改记忆、两端各写一份命名规则）由本模块收敛即可消除。

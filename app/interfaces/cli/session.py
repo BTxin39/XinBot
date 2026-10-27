@@ -2,7 +2,7 @@
 
 为什么需要这一层：`services` 不得 import 命令适配器（依赖纪律 R2b），
 "命令分派器用哪个实现、结果怎么渲染"必须由 CLI 侧决定。
-见 docs/DECISIONS_V0.2.md §6。
+见 docs/DECISIONS/DECISIONS_V0.2.0.md §6。
 
 本文件是**装配点**，因此允许 import 命令层与 rich（R2b 只约束 services）。
 """

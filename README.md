@@ -16,6 +16,7 @@ API Key 与 Ollama 配置、角色卡与外观、记忆终端、字符画、端�
 
 ```powershell
 xinbot start web             # 网页桌宠：http://127.0.0.1:3796
+xinbot start pet             # 桌面常驻桌宠（透明 / 置顶 / 鼠标穿透）
 xinbot start cli             # 终端桌宠
 xinbot logs --follow         # 另一个终端：实时查看后端运行日志
 xinbot start --show          # 查询运行状态、PID 和地址
@@ -27,7 +28,39 @@ xinbot start web --shutdown  # 关闭本项目的网页后端
 关闭网页或启动终端不会停止后台服务，请使用 `--shutdown`。进程日志位于 `data/web.log`。
 网页地址的端口前是冒号 `:3796`，不是路径 `/3796`。
 
+### 桌面常驻桌宠
+
+```powershell
+uv sync --extra desktop      # 首次：装 pywebview（桌宠窗口依赖）
+xinbot start pet
+```
+
+- 无边框、透明、始终置顶，角色直接浮在桌面上；
+- **默认鼠标穿透**：点桌面上的东西不会被挡，只有点在角色身上才响应；
+- 左键拖动移动，位置自动记忆；右键菜单可切换置顶/穿透、隐藏或退出；
+- 桌面壳只做显示，对话仍走后端，不会出现两个 Agent 抢同一份记忆；
+- 仅 Windows，依赖系统自带 WebView2 运行时（Win10/11 通常已安装）。
+
 需要 Python 3.12+ 和 [uv](https://docs.astral.sh/uv/getting-started/installation/)。首次安装依赖需要联网。
+
+### 一键安装（推荐给普通用户）
+
+下载 `dist/XinBot-v0.2.0-installer.zip`，解压到想长期使用的目录，然后**右键
+`install.ps1` → 使用 PowerShell 运行**。它会自动完成：
+
+1. 检查并安装 uv（不需要管理员权限，装在用户目录）
+2. `uv sync --frozen` 安装项目依赖，并安装桌宠窗口依赖
+3. 在桌面和开始菜单创建「XinBot 桌宠」快捷方式
+4. 双击快捷方式即可启动（无控制台黑窗）
+
+如果系统提示禁止运行脚本，用这条命令绕过（不必关闭全局执行策略）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+卸载：`.\uninstall.ps1` 只删快捷方式与开机自启，**保留你的数据**；
+`.\uninstall.ps1 -Purge` 才会删除 `data\`、`pet\`、`.env`（有二次确认）。
 
 ### 从 v0.1 升级到 v0.2
 

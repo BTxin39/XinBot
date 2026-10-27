@@ -3,6 +3,23 @@ import { reactive, ref, watch } from 'vue';
 import { Save, Plus, KeyRound, Trash2, Pencil, RefreshCw } from 'lucide-vue-next';
 import { state, refresh, report } from '../state.js';
 import api from '../api.js';
+import { available as locales, chooseLocale, locale, t } from '../i18n.js';
+
+// 语言切换：立即生效并写回服务端
+const switching = ref(false);
+async function pickLocale(event) {
+  const value = event.target.value;
+  if (!value || value === locale.value) return;
+  switching.value = true;
+  try {
+    await chooseLocale(value);
+    state.notice = `${t('settings.language')}: ${value}`;
+  } catch (error) {
+    report(error);
+  } finally {
+    switching.value = false;
+  }
+}
 
 const tab = ref('connections');
 const form = reactive({name:'', provider_type:'openai-compatible', base_url:'https://api.openai.com/v1', model:'', api_key:''});
@@ -53,6 +70,15 @@ async function saveKey() { await run(async()=>{ await api.updateKey(keyProvider.
     <header class="view-header"><div><span class="eyebrow">PREFERENCES</span><h2>模型与设置</h2></div><KeyRound :size="22"/></header>
     <div class="view-tabs"><button :class="{active:tab==='connections'}" @click="tab='connections'">模型与连接</button><button :class="{active:tab==='config'}" @click="tab='config'">运行配置</button></div>
     <div class="page-body">
+      <section class="form-section">
+        <h3>{{ t('settings.language') }}</h3>
+        <label>
+          <select :value="locale" :disabled="switching" @change="pickLocale">
+            <option v-for="item in locales" :key="item.code" :value="item.code">{{ item.label }}</option>
+          </select>
+        </label>
+        <small>切换后界面文案立即生效，同时保存到本机配置。</small>
+      </section>
       <template v-if="tab==='connections'">
         <section class="form-section">
           <h3>模型库</h3>

@@ -1,4 +1,4 @@
-"""记忆与角色 service 的契约测试（docs/DECISIONS_V0.2.md §5.2、P3）。
+"""记忆与角色 service 的契约测试（docs/DECISIONS/DECISIONS_V0.2.0.md §5.2、P3）。
 
 P3 收敛了两个跨端缺陷：
     D1 —— 切换角色时是否同时切换记忆上下文，此前只有 Web 做，CLI 不做；

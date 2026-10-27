@@ -1,7 +1,7 @@
 """Agent 生命周期（单例 / 重建 / 释放）—— 跨端唯一入口。
 
 取代原先分散的实现（已删除的 `web/agent_manager.py` 与 `core/session.py` 的 `init()`），
-见 docs/DECISIONS_V0.2.md §7。
+见 docs/DECISIONS/DECISIONS_V0.2.0.md §7。
 
 职责边界：
     - 只做**生命周期**与对话驱动，不含 HTTP 语义、不 import fastapi
@@ -13,11 +13,14 @@
     也不会把重建时机散落到 8 个路由里。
 """
 
+import logging
 from threading import RLock
 
 from app.config.runtime import RuntimeConfig
 from app.core.agent import Agent
 from app.core.tools.guard import ApprovalCallback
+
+logger = logging.getLogger(__name__)
 
 
 class AgentRuntime:
@@ -91,9 +94,30 @@ class AgentRuntime:
         if self._instance is None:
             # 不传 approval_callback 时 ToolGuard 按 fail-safe 拒绝危险工具
             agent = Agent(RuntimeConfig.load(), approval_callback=self._approval_callback)
+            self._register_plugins(agent)
             self._inject_greeting(agent)
             self._instance = agent
         return self._instance
+
+    def _register_plugins(self, agent: Agent) -> None:
+        """把用户插件工具挂到 Agent 上。
+
+        为什么在这里而不是 `Agent` 内部：
+        分层规则禁止 `core` 依赖 `services`（见 tests/test_layering.py R1），
+        而插件加载要用 `app.services.plugin_service`。所以由服务层在构造
+        完成后注入，Agent 本身对"插件"完全无感。
+
+        插件出错只记日志，**绝不影响 Agent 启动**。
+        """
+        try:
+            from app.paths import repo_root
+            from app.services import plugin_service
+
+            result = plugin_service.load(repo_root(), agent.tool_registry)
+            for name, reason in result.skipped:
+                logger.info("插件 %s 未加载：%s", name, reason)
+        except Exception as error:  # noqa: BLE001  插件系统自身故障不能拖垮对话
+            logger.warning("插件加载失败：%s", error)
 
     def invalidate(self) -> None:
         """释放当前实例并清空，下次 agent() 以最新配置重建。

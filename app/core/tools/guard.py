@@ -33,7 +33,7 @@ ApprovalCallback = Callable[["BaseTool", dict], bool]
     kwargs — LLM 传入的参数字典，用于展示给用户做判断
     返回 True=批准，False=拒绝
 
-具体实现由调用方注入（CLI 见 `app.interfaces.cli.approval`）。见 docs/DECISIONS_V0.2.md §9。
+具体实现由调用方注入（CLI 见 `app.interfaces.cli.approval`）。见 docs/DECISIONS/DECISIONS_V0.2.0.md §9。
 """
 
 

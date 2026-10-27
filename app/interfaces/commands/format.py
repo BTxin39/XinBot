@@ -1,7 +1,7 @@
 """命令结果的纯文本渲染 —— 供 Web 终端与任何无 rich 的调用方使用。
 
 与 `app/interfaces/cli/command_render.py`（rich 渲染）共用同一份 `CommandResult` 契约，
-避免两端各自拼字符串再次漂移。见 docs/DECISIONS_V0.2.md §6。
+避免两端各自拼字符串再次漂移。见 docs/DECISIONS/DECISIONS_V0.2.0.md §6。
 """
 
 from app.interfaces.commands.result import AFFIRM, CONFIRMATION, TABLE, TEXT, CommandResult

@@ -123,9 +123,29 @@ class RagSourceData(BaseModel):
 
 # ── Pet ──────────────────────────────────────────────────
 
+class IdleActionData(BaseModel):
+    """一次待机主动行为（问候 / 搭话）。"""
+
+    kind: str
+    text: str
+    emotion: str = "normal"
+
+
+class ReminderData(BaseModel):
+    """一条到期的提醒。"""
+
+    id: str
+    text: str
+    repeat: str = "once"
+
+
 class PetStateData(BaseModel):
     emotion: str
     persona_name: str
     latest_message: str
     has_new_message: bool
     timestamp: int
+    # 本轮轮询要触发的待机行为；None 表示没有
+    idle_action: IdleActionData | None = None
+    # 本轮到期的提醒；一次只给一条，避免气泡刷屏
+    reminder: ReminderData | None = None

@@ -36,6 +36,11 @@ def release_files(root: Path):
     for path in sorted((root / "app/interfaces/web/static/dist").rglob("*")):
         if path.is_file() and not path.is_symlink() and path.suffix in {".html", ".js", ".css"}:
             yield path.relative_to(root)
+    # 桌宠窗口宿主（单文件 exe）：不打进包的话，用户装完也没有可用的桌宠窗口。
+    # 只在构建过的情况下带上，避免打包脚本在没装 .NET 的机器上失败。
+    host = root / "host" / "XinBotPet.exe"
+    if host.is_file():
+        yield Path("host/XinBotPet.exe")
 
 
 def main():

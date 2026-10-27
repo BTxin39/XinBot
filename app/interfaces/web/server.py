@@ -15,6 +15,11 @@ from app.services.agent_runtime import AgentRuntime
 from app.interfaces.web.routes import status, chat, config, persona, rag, pet
 from app.interfaces.web.routes import models
 from app.interfaces.web.routes import memory, ascii_art, logs as logs_route
+from app.interfaces.web.routes import speech as speech_route
+from app.interfaces.web.routes import reminders as reminders_route
+from app.interfaces.web.routes import themes as themes_route
+from app.interfaces.web.routes import update as update_route
+from app.interfaces.web.routes import locale as locale_route
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 
@@ -57,6 +62,11 @@ app.include_router(models.router)
 app.include_router(memory.router)
 app.include_router(ascii_art.router)
 app.include_router(logs_route.router)
+app.include_router(speech_route.router)
+app.include_router(reminders_route.router)
+app.include_router(themes_route.router)
+app.include_router(update_route.router)
+app.include_router(locale_route.router)
 
 
 @app.exception_handler(HTTPException)

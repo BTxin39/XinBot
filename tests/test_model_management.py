@@ -1,6 +1,6 @@
 """外观模型的删除/重命名、日志导出的契约测试。
 
-对应 docs/DECISIONS_v0.2.1.md §3 计划外补强 1（重复导入）与后续建议 1、3。
+对应 docs/DECISIONS/DECISIONS_v0.2.1.md §3 计划外补强 1（重复导入）与后续建议 1、3。
 """
 
 import json

@@ -1,7 +1,7 @@
 """xinbot rag —— 本地知识库管理。
 
 P4 起经 `app.services.rag_service.RagService`，与 Web 端共享同一份
-标签/类型/网址校验（见 docs/DECISIONS_V0.2.md §5.2）。
+标签/类型/网址校验（见 docs/DECISIONS/DECISIONS_V0.2.0.md §5.2）。
 """
 
 from pathlib import Path

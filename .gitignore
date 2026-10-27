@@ -22,7 +22,17 @@ app/web/test-results/
 #Vibe
 .claude
 
+# 决策书：只保留在本地，不纳入版本库
+docs/DECISIONS/
+
+# C# 桌宠宿主的构建产物（源码要留，产物不留）
+desktop/**/bin/
+desktop/**/obj/
+
 # test code
 backend
 
 scratch
+
+# 桌宠宿主单文件产物（构建生成）
+host/

@@ -1,4 +1,4 @@
-"""角色业务编排 —— 跨端唯一入口（docs/DECISIONS_V0.2.md §5.2）。
+"""角色业务编排 —— 跨端唯一入口（docs/DECISIONS/DECISIONS_V0.2.0.md §5.2）。
 
 解决的缺陷 **D1**：切换角色时"是否同时切换记忆上下文"此前只有 Web 做了
 （写 `current_memory_name = web-{name}`），CLI 的 `persona set` 只改

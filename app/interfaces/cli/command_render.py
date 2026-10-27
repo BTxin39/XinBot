@@ -1,7 +1,7 @@
 """命令结果的 rich 渲染（CLI 专用）。
 
 命令层返回结构化 `CommandResult` 后，终端呈现集中到这里，
-使命令逻辑能被 Web 复用（见 docs/DECISIONS_V0.2.md §6）。
+使命令逻辑能被 Web 复用（见 docs/DECISIONS/DECISIONS_V0.2.0.md §6）。
 """
 
 from rich.console import Console

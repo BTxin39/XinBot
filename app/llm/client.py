@@ -27,9 +27,12 @@ class LLMClient:
         messages: list[dict],
         model: str | None = None,
         temperature: float | None = None,
+        tools: list[dict] | None = None,
     ):
+        """流式对话，逐条 yield `StreamEvent`（delta / tool_calls）。"""
         yield from self.provider.stream_chat(
             messages=messages,
             model=model or self.config.model_name,
             temperature=temperature if temperature is not None else self.config.temperature,
+            tools=tools,
         )

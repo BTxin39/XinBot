@@ -1,6 +1,6 @@
 """终端审批交互 —— DANGEROUS 工具执行前询问用户。
 
-设计依据见 `docs/DECISIONS_V0.2.md` §9：审批方式属于**交互层**职责，
+设计依据见 `docs/DECISIONS/DECISIONS_V0.2.0.md` §9：审批方式属于**交互层**职责，
 core 只声明 `ApprovalCallback` 契约，由调用方注入具体实现。
 
 - CLI：`Agent(config, approval_callback=cli_approval_callback)`

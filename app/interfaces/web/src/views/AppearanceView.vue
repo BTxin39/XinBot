@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n.js';
 import { ref, computed } from 'vue';
 import { Upload, Check, Box, AlertTriangle, Trash2, Pencil, X } from 'lucide-vue-next';
 import { state, pet, character, refresh, report } from '../state.js';
@@ -93,8 +94,8 @@ async function confirmRename(item) {
 <template>
   <section class="page-view">
     <header class="view-header">
-      <div><span class="eyebrow">APPEARANCE</span><h2>桌宠外观</h2></div>
-      <button class="button" :disabled="busy" @click="input.click()"><Upload :size="16"/>导入 ZIP</button>
+      <div><span class="eyebrow">APPEARANCE</span><h2>{{ t('appearance.title') }}</h2></div>
+      <button class="button" :disabled="busy" @click="input.click()"><Upload :size="16"/>{{ t('appearance.import') }}</button>
       <input hidden ref="input" type="file" accept=".zip" @change="upload"/>
     </header>
 
@@ -104,7 +105,7 @@ async function confirmRename(item) {
         <span>有 {{ missingRuntime.length }} 个模型缺少运行时，暂时无法显示：{{ missingRuntime[0].runtime_missing }}</span>
       </div>
 
-      <div class="section-label">模型库 <span>{{ state.pets.length }} 个外观</span></div>
+      <div class="section-label">{{ t('appearance.library') }} <span>{{ state.pets.length }} 个外观</span></div>
       <div class="asset-grid">
         <div v-for="item in state.pets" :key="item.id" class="asset-card"
              :class="{ selected: pet?.id === item.id, unavailable: item.runtime_ready === false }">
@@ -116,7 +117,7 @@ async function confirmRename(item) {
             </div>
             <div class="asset-info"><strong>{{ item.name }}</strong><Check v-if="pet?.id === item.id" :size="17"/></div>
             <span class="badge">{{ formatLabel(item) }}</span>
-            <span v-if="item.runtime_ready === false" class="badge warn">缺运行时</span>
+            <span v-if="item.runtime_ready === false" class="badge warn">{{ t('appearance.missingRuntime') }}</span>
           </button>
 
           <!-- 内置目录里的模型不提供删除/改名：它们属于发布包资产 -->
@@ -139,7 +140,7 @@ async function confirmRename(item) {
         </div>
       </div>
 
-      <div v-if="!state.pets.length" class="empty">暂无模型</div>
+      <div v-if="!state.pets.length" class="empty">{{ t('appearance.empty') }}</div>
 
       <p class="hint">
         支持三种格式：Live2D Cubism 3/4/5（<code>.model3.json</code>）、

@@ -1,0 +1,164 @@
+/*
+ * 主题变量与覆盖层。
+ *
+ * 背景：原样式表是全硬编码色值（73 种），直接重写风险太高。这里只抽出
+ * 「主要表面色」9 个核心变量，用它们覆盖关键选择器；其余细节保持原样。
+ *
+ * 两条必须遵守的规则（都实测踩过）：
+ *   1. 本文件必须在 style/management/workspace **之后**导入，
+ *      否则同名规则会被后者盖掉；
+ *   2. 选择器特异性要**对齐**原样式表。workspace.css 用的是
+ *      `.new-workspace .companion`（0,2,0），只写 `.companion`（0,1,0）无效。
+ *
+ * 默认主题（spring）的变量值刻意取"改造前的最终色值"，
+ * 因此默认外观与之前一致；切换主题只改这一层。
+ *
+ * 变量由前端在 <html> 上 inline 设置（见 theme.js），这里只提供兜底值。
+ */
+
+:root {
+  /* 核心 9 色（每个主题都会覆盖） */
+  --xin-bg: #f8faf9;
+  --xin-surface: #ffffff;
+  /* 取 workspace.css 里 .companion 的最终值 #edf4ef（不是 style.css 的 #eff3ee） */
+  --xin-surface-2: #edf4ef;
+  --xin-border: #dce3df;
+  --xin-text: #273730;
+  --xin-text-muted: #78867e;
+  --xin-accent: #376f55;
+  --xin-accent-strong: #2a5c44;
+  --xin-accent-soft: #eaf2ed;
+
+  /* 长尾色：默认取原值，保证与改造前一致 */
+  --xin-border-fine: #dce4df;
+  --xin-border-header: #e1e7e3;
+  --xin-border-companion: #dde5df;
+  --xin-badge-bg: #e9efeb;
+  --xin-preview-bg: #f0f4f0;
+}
+
+/* 非默认主题：长尾色跟随核心变量，避免切换后残留绿色调 */
+html[data-theme]:not([data-theme="spring"]) {
+  --xin-border-fine: var(--xin-border);
+  --xin-border-header: var(--xin-border);
+  --xin-border-companion: var(--xin-border);
+  --xin-badge-bg: var(--xin-accent-soft);
+  --xin-preview-bg: var(--xin-surface-2);
+}
+
+/* ── 底色与文字 ───────────────────────────────────────────── */
+
+html,
+body {
+  background: var(--xin-bg) !important;
+  color: var(--xin-text) !important;
+}
+
+.workspace,
+.new-workspace {
+  background: var(--xin-bg);
+}
+
+.content {
+  background: var(--xin-surface);
+}
+
+/* ── 顶栏 / 侧栏 / 角色区 ─────────────────────────────────── */
+
+.app-header {
+  background: var(--xin-surface);
+  border-bottom-color: var(--xin-border-header);
+}
+
+.rail {
+  background: var(--xin-surface);
+  border-right-color: var(--xin-border-header);
+}
+
+.new-workspace .companion {
+  background: var(--xin-surface-2);
+  border-right-color: var(--xin-border-companion);
+}
+
+.new-workspace .content {
+  border-left-color: var(--xin-border-companion);
+  border-top-color: var(--xin-border-companion);
+}
+
+.view-header {
+  border-bottom-color: var(--xin-border-header);
+}
+
+/* ── 强调色 ───────────────────────────────────────────────── */
+
+.brand-mark,
+.primary {
+  background: var(--xin-accent) !important;
+  border-color: var(--xin-accent) !important;
+  color: #fff !important;
+}
+
+.primary:hover {
+  background: var(--xin-accent-strong) !important;
+}
+
+.prose a {
+  color: var(--xin-accent);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--xin-accent);
+}
+
+/* ── 卡片与控件 ───────────────────────────────────────────── */
+
+input,
+textarea,
+select {
+  background: var(--xin-surface);
+  border-color: var(--xin-border);
+  color: var(--xin-text);
+}
+
+.button {
+  background: var(--xin-surface);
+  border-color: var(--xin-border-fine);
+}
+
+.button:hover,
+.icon-button:hover,
+.menu-popover a:hover {
+  background: var(--xin-accent-soft);
+}
+
+.badge {
+  background: var(--xin-badge-bg);
+  color: var(--xin-text-muted);
+}
+
+.asset-card,
+.persona-card,
+.menu-popover,
+.character-selector {
+  background: var(--xin-surface);
+  border-color: var(--xin-border);
+}
+
+.asset-preview {
+  background: var(--xin-preview-bg);
+}
+
+.pet-toolbar {
+  background: var(--xin-surface);
+  border-color: var(--xin-border-companion);
+}
+
+.section-label span,
+.eyebrow,
+.connection,
+.mood,
+small {
+  color: var(--xin-text-muted);
+}

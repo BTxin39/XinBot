@@ -1,4 +1,4 @@
-"""LLM 配置与知识库 service 的契约测试（docs/DECISIONS_V0.2.md §5.2、P4）。
+"""LLM 配置与知识库 service 的契约测试（docs/DECISIONS/DECISIONS_V0.2.0.md §5.2、P4）。
 
 P4 收敛了两处跨端重复：
     - 服务商/模型/运行配置的编排与校验（原 CLI 与 Web 各一份）—— 含 D2

@@ -9,6 +9,6 @@
  *   2. 本模块只能被**动态 import**，这样 Vite 会把它拆成独立 chunk，
  *      只有真正要看旧格式模型时才求值。
  *
- * 相关约束见 docs/DECISIONS_v0.2.1.md §1.4。
+ * 相关约束见 docs/DECISIONS/DECISIONS_v0.2.1.md §1.4。
  */
 export { Live2DModel } from 'pixi-live2d-display/cubism2';

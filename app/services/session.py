@@ -1,6 +1,6 @@
 """公用会话驱动：CLI 与 Web 共用的 Agent 对话循环骨架。
 
-原位置 `app/core/session.py` 有两个问题（见 docs/DECISIONS_V0.2.md §7、§2.4）：
+原位置 `app/core/session.py` 有两个问题（见 docs/DECISIONS/DECISIONS_V0.2.0.md §7、§2.4）：
     1. 领域层 `core/` 反向 import 了适配器层的命令注册表（当时位于 `app.commands.handler`）；
     2. `chat_once()` 号称"Web 端可直接用"，实际 Web 从未使用（假共用 API）。
 

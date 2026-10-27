@@ -1,4 +1,4 @@
-"""AgentRuntime 生命周期契约（docs/DECISIONS_V0.2.md §7）。
+"""AgentRuntime 生命周期契约（docs/DECISIONS/DECISIONS_V0.2.0.md §7）。
 
 P1 的目标是把"Agent 单例 / 重建 / 释放"从散落的 8 处路由调用收敛为单一入口。
 本文件锁住三件容易被后续重构悄悄破坏的事：

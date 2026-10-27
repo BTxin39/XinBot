@@ -1,4 +1,5 @@
 <script setup>
+import { t } from '../i18n.js';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { RefreshCw, Trash2, Play, Pause, Activity, Download } from 'lucide-vue-next';
 import api from '../api.js';
@@ -12,10 +13,10 @@ const loading = ref(false);
 let timer = null;
 
 const LEVELS = [
-  { value: '', label: '全部' },
-  { value: 'INFO', label: 'INFO 以上' },
-  { value: 'WARNING', label: 'WARNING 以上' },
-  { value: 'ERROR', label: '仅 ERROR' },
+  { value: '', label: t('logs.levelAll') },
+  { value: 'INFO', label: t('logs.levelInfo') },
+  { value: 'WARNING', label: t('logs.levelWarning') },
+  { value: 'ERROR', label: t('logs.levelError') },
 ];
 
 const uptime = computed(() => {
@@ -81,14 +82,14 @@ onUnmounted(() => window.clearInterval(timer));
 <template>
   <section class="page-view">
     <header class="view-header">
-      <div><span class="eyebrow">RUNTIME</span><h2>运行状态与日志</h2></div>
+      <div><span class="eyebrow">RUNTIME</span><h2>{{ t('logs.title') }}</h2></div>
       <div class="actions">
         <button class="button ghost" @click="toggle">
-          <component :is="autoRefresh ? Pause : Play" :size="16"/>{{ autoRefresh ? '暂停刷新' : '自动刷新' }}
+          <component :is="autoRefresh ? Pause : Play" :size="16"/>{{ autoRefresh ? t('logs.pause') : t('logs.autoRefresh') }}
         </button>
-        <button class="button ghost" :disabled="loading" @click="reload"><RefreshCw :size="16"/>刷新</button>
-        <button class="button ghost" @click="exportLogs"><Download :size="16"/>导出</button>
-        <button class="button ghost" @click="clearLogs"><Trash2 :size="16"/>清空</button>
+        <button class="button ghost" :disabled="loading" @click="reload"><RefreshCw :size="16"/>{{ t('logs.refresh') }}</button>
+        <button class="button ghost" @click="exportLogs"><Download :size="16"/>{{ t('logs.export') }}</button>
+        <button class="button ghost" @click="clearLogs"><Trash2 :size="16"/>{{ t('logs.clear') }}</button>
       </div>
     </header>
 
@@ -127,7 +128,7 @@ onUnmounted(() => window.clearInterval(timer));
           <span class="log-logger">{{ item.logger }}</span>
           <span class="log-message">{{ item.message }}</span>
         </div>
-        <div v-if="!entries.length" class="empty">暂无日志。</div>
+        <div v-if="!entries.length" class="empty">{{ t('logs.empty') }}</div>
       </div>
     </div>
   </section>

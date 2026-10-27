@@ -1,4 +1,4 @@
-"""命令层契约（docs/DECISIONS_V0.2.md §6）。
+"""命令层契约（docs/DECISIONS/DECISIONS_V0.2.0.md §6）。
 
 P2 的目标是让命令逻辑可被 Web 复用。关键是"命令层不再依赖 rich"——
 这不能靠肉眼检查，所以本文件用 `sys.modules` 做**可执行证明**：

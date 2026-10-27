@@ -73,7 +73,7 @@ class ChatMemory(BaseMemory):
     def sync_if_stale(self) -> bool:
         """检测并同步外部（另一进程）对本记忆的修改。
 
-        为什么需要（docs/DECISIONS_V0.2.md 缺陷 D4）：CLI 与 Web 可能同时运行，
+        为什么需要（docs/DECISIONS/DECISIONS_V0.2.0.md 缺陷 D4）：CLI 与 Web 可能同时运行，
         而 `self.messages` 是进程内缓存——Web 端切换记忆或改写消息后，
         常驻的 CLI 进程会继续读写旧数据。
 

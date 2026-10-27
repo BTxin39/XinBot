@@ -1,6 +1,6 @@
 """记忆管理 REST 接口 —— 只做协议转换，业务编排在 `app/services/memory_service.py`。
 
-P3 变更（docs/DECISIONS_V0.2.md §5.2）：
+P3 变更（docs/DECISIONS/DECISIONS_V0.2.0.md §5.2）：
     本模块原先直接 `import SQLiteStore` 并自己实现"校验 + 编排 + 事务"，
     与 CLI 各写一份（缺陷 D4），且违反路由层不得直连存储的纪律（R3）。
     现在全部经 `MemoryService`，本文件不再出现 SQLiteStore。

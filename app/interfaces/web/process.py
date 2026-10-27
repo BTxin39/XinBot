@@ -61,13 +61,13 @@ def shutdown():
     raise RuntimeError("后端仍在关闭中，请稍后使用 xinbot start --show 查询")
 
 
-def launch(port, dev=False):
+def launch(port, dev=False, open_browser=True):
     record = read_state()
     if probe(record):
         if record['port'] != port or record.get('dev') != dev:
             raise RuntimeError("已有不同配置的后端运行，请先执行 xinbot start web --shutdown")
         show()
-        if not dev:
+        if not dev and open_browser:
             webbrowser.open(f"http://127.0.0.1:{port}/#/")
         return
     with socket.socket() as check:
@@ -91,13 +91,30 @@ def launch(port, dev=False):
         # Windows venv launchers may create a child with a different PID.
         if record and record.get('port') == port and record.get('dev') == dev and probe(record):
             show()
-            if not dev:
+            if not dev and open_browser:
                 webbrowser.open(f"http://127.0.0.1:{port}/#/")
             return
         if child.poll() is not None:
             break
         time.sleep(.1)
     raise RuntimeError(f"启动未就绪，请查看 {logs / 'web.log'}；使用 --show 确认状态")
+
+
+def ensure_running(port):
+    """确保后端在跑，但**不打开浏览器**（桌宠外壳只需要后端）。
+
+    返回当前受管进程的状态记录；无法就绪时抛 RuntimeError。
+    """
+    record = read_state()
+    if probe(record):
+        if record['port'] != port:
+            raise RuntimeError(
+                f"后端已在端口 {record['port']} 运行，与请求的 {port} 不一致；"
+                "请先执行 xinbot start web --shutdown"
+            )
+        return record
+    launch(port, dev=False, open_browser=False)
+    return read_state()
 
 
 def serve(port, dev):

@@ -7,7 +7,7 @@
     - CLI `xinbot start cli --image`（app/interfaces/cli）
     - Web `/api/ascii`（app/interfaces/web/routes）
 
-见 docs/DECISIONS_V0.2.md §5.2：本模块不属于 CLI，故置于 services。
+见 docs/DECISIONS/DECISIONS_V0.2.0.md §5.2：本模块不属于 CLI，故置于 services。
 """
 
 from pathlib import Path

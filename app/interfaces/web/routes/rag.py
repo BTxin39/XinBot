@@ -1,6 +1,6 @@
 """知识库 REST 接口 —— 只做协议转换，业务校验在 `app/services/rag_service.py`。
 
-P4 变更（docs/DECISIONS_V0.2.md §5.2）：
+P4 变更（docs/DECISIONS/DECISIONS_V0.2.0.md §5.2）：
     校验（标签长度、文件类型与大小、网址协议）原先在本文件与 CLI 各写一份，
     现收敛到 service；本文件不再 import `PersonaStore`（`/graph` 改经 service）。
 """

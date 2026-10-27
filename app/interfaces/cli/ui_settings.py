@@ -2,7 +2,7 @@
 
 原路径 `app/config/cli_ui_settings.py` 属于归属错误：该模块只服务终端宠物
 （ascii 图案、历史显示行数），却躺在通用 `config/` 包中并反向导入 `app/interfaces/cli`。
-见 docs/DECISIONS_V0.2.md §5.2 与 P0-2。
+见 docs/DECISIONS/DECISIONS_V0.2.0.md §5.2 与 P0-2。
 
 调用方：`app/interfaces/cli/{start,config,doctor,desktop_ui}.py`
 """

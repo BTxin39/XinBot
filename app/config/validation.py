@@ -1,6 +1,6 @@
 """Configuration validation module for checking required settings before startup.
 
-本模块属于 `config/` 层，**不得依赖渲染库**（见 docs/DECISIONS_V0.2.md §8 R4）。
+本模块属于 `config/` 层，**不得依赖渲染库**（见 docs/DECISIONS/DECISIONS_V0.2.0.md §8 R4）。
 原先它在模块导入期 `from rich.console import Console`，导致任何经过
 `Agent → validate_config` 的调用链都被迫加载 rich——Web 端复用命令层时即被这一点挡住。
 现在校验只返回/抛出错误列表，打印交给各适配器。

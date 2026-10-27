@@ -111,7 +111,6 @@ def cli(
 def web(
     shutdown: bool = typer.Option(False, "--shutdown", help="关闭本项目启动的网页后端"),
     dev: bool = typer.Option(False, "--dev", help="开发模式，不 serve 前端静态文件"),
-    no_pet: bool = typer.Option(True, "--no-pet", help="跳过 Pygame 桌面宠物子进程"),
     port: int | None = typer.Option(None, "--port", "-p", min=1024, max=65535, help="Web 端口，默认 3796；已保存配置时使用配置值"),
 ):
     """启动 FastAPI Web 后端 (REST + WebSocket)。
@@ -121,9 +120,6 @@ def web(
 
     生产模式 (serve 前端 build 产物):
         xinbot start web
-
-    不启动桌面宠物:
-        xinbot start web --no-pet
     """
     from app.config.runtime import RuntimeConfig
     from app.interfaces.web.process import launch, shutdown as stop_server
@@ -135,4 +131,96 @@ def web(
     except (RuntimeError, OSError) as error:
         typer.echo(str(error), err=True)
         raise typer.Exit(1)
+
+
+@start_app.command(help="启动桌面常驻桌宠（透明 / 置顶 / 可鼠标穿透）。")
+def pet(
+    no_passthrough: bool = typer.Option(
+        False, "--no-passthrough",
+        help="关闭默认鼠标穿透：桌宠会挡住桌面点击（调试时用）",
+    ),
+    no_topmost: bool = typer.Option(
+        False, "--no-topmost", help="不置顶，允许其他窗口盖住桌宠"
+    ),
+    no_tray: bool = typer.Option(
+        False, "--no-tray", help="不显示系统托盘图标"
+    ),
+    port: int | None = typer.Option(
+        None, "--port", "-p", min=1024, max=65535, help="后端端口（默认读保存的配置）"
+    ),
+    autostart_launch: bool = typer.Option(
+        False, "--autostart-launch", hidden=True,
+        help="内部参数：由开机自启项传入，表示无人值守启动",
+    ),
+    autostart: str | None = typer.Option(
+        None, "--autostart", help="开机自启：on / off / status（不启动窗口）"
+    ),
+):
+    """启动桌面常驻桌宠。
+
+    需要后端在跑：本命令会检测，未运行则自动启动。
+
+        xinbot start pet                    # 透明+置顶+穿透+托盘
+        xinbot start pet --no-passthrough   # 不穿透（能直接点桌宠）
+        xinbot start pet --no-tray          # 不起托盘图标
+        xinbot start pet --autostart on     # 开机自启（不启动窗口）
+    """
+    import typer as _typer
+
+    from app.config.runtime import RuntimeConfig
+    from app.interfaces.desktop import autostart as autostart_module
+    from app.interfaces.desktop import shell, win32_api
+    from app.paths import repo_root
+
+    if not win32_api.available():
+        _typer.echo("桌宠窗口目前仅支持 Windows。", err=True)
+        raise _typer.Exit(1)
+
+    # 只管理开机自启，不启动窗口
+    if autostart is not None:
+        manager = autostart_module.Autostart()
+        mode = autostart.lower()
+        if mode == "status":
+            entry = manager.status()
+            if entry:
+                _typer.echo(f"开机自启：已开启\n命令：{entry.command}")
+            else:
+                _typer.echo("开机自启：未开启")
+            return
+        if mode == "on":
+            command = autostart_module.Autostart.default_command(repo_root())
+            manager.enable(command)
+            _typer.echo(f"已开启开机自启：{command}")
+            return
+        if mode == "off":
+            removed = manager.disable()
+            _typer.echo("已关闭开机自启" if removed else "开机自启本来就是关闭状态")
+            return
+        _typer.echo("--autostart 只接受 on / off / status", err=True)
+        raise _typer.Exit(2)
+
+    config = RuntimeConfig.load()
+    actual_port = port or config.web_port
+
+    # 复用网页后端的受管进程逻辑：未运行则拉起
+    from app.interfaces.web.process import ensure_running
+
+    try:
+        ensure_running(actual_port)
+    except (RuntimeError, OSError) as error:
+        _typer.echo(f"后端启动失败：{error}", err=True)
+        raise _typer.Exit(1) from error
+
+    url = f"http://127.0.0.1:{actual_port}/#/pet"
+    try:
+        shell.run(
+            url,
+            repo_root(),
+            click_through=not no_passthrough,
+            always_on_top=not no_topmost,
+            with_tray=not no_tray,
+        )
+    except RuntimeError as error:
+        _typer.echo(str(error), err=True)
+        raise _typer.Exit(1) from error
 
